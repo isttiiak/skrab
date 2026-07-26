@@ -303,7 +303,9 @@ still works.
 - **macOS Screen Recording permission** is required for `xcap`. The app must be
   **relaunched** after granting it. In dev, each rebuild changes the binary path and
   resets the grant — expect this.
-- **macOS Accessibility permission** is required for simulated keystrokes (F4).
+- **macOS Accessibility permission** is required for simulated keystrokes (F4). The
+  auto-paste setting defaults to off; `enigo` is compiled in but never invoked until
+  the user opts in.
 - **macOS 26 Tahoe removed the right-click→Open** Gatekeeper bypass. Unsigned builds
   need System Settings → Privacy & Security → Open Anyway. The landing page must
   document this.
@@ -354,18 +356,30 @@ Conventional Commits: `feat(clipboard): …`, `fix(screenshot): …`, `chore(dep
   dedup, history panel, FTS5 search, favorites, retention, settings, keychain key storage.
 - **Phase 2 — Distribution + landing page.** CI matrix, release workflow, updater
   keypair, Windows signing, Astro landing page on Cloudflare Pages, **v0.1.0 shipped**.
-- **Phase 3 — Screenshot capture.** (Spike `xcap` on current macOS first.)
+- **Phase 3 — Screenshot capture.** Backend done: display/window/region capture,
+  multi-monitor rebasing, edge clamping. The `xcap` spike passes on macOS 26 (real
+  frame with live windows, not the degraded desktop-only frame). *Still to do: the
+  region-selection overlay and the capture UI.*
+- **Phase 5 — Smart paste / pinned items. ✅ Done** (reordered ahead of the editor at
+  the user's request — it is the differentiator, and the editor is the bigger chunk).
+  Always-on-top widget, click-to-copy, used/unused feedback, auto-advance, opt-in
+  auto-paste via `enigo`.
 - **Phase 4 — Screenshot editor.** Konva, annotation tools, undo/redo, export.
-- **Phase 5 — Smart paste / pinned items.**
 - **Phase 6 — Linux, then OCR / redaction / AI object removal / optional E2EE sync.**
 
 ### Performance budget
 
-This runs in the background all day. These are pass/fail, not aspirations, and are
-measured on **release** builds (a debug build with devtools and HMR runs ~120MB and tells
-you nothing):
+This runs in the background all day. Measured on **release** builds only — a debug
+build with devtools and HMR tells you nothing.
 
-**idle CPU ≈ 0%** · **RSS < ~80MB** · **clip recorded < ~300ms** · **search < 100ms**
+**Measured on 2026-07-27 (v0.1.1, macOS, Apple silicon):** main process **108 MB**,
+plus WebKit's helpers (66 MB WebContent, 17 MB Networking).
+
+**The <80 MB target is currently NOT met** and needs a real optimisation pass — do
+not quietly restate the target as met. Likely candidates: the base64 thumbnails in
+the list payload, the default page size, and whatever the webview retains.
+
+Still holding: **idle CPU ≈ 0%** · **clip recorded < ~300ms** · **search < 100ms**
 over 1000+ items.
 
 ---
@@ -381,4 +395,4 @@ over 1000+ items.
 
 ---
 
-_Last updated: 2026-07-27 · CLAUDE.md version: 2.0_
+_Last updated: 2026-07-27 · CLAUDE.md version: 2.1_
