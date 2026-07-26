@@ -148,7 +148,10 @@ jobs:
           releaseBody: ${{ needs.prepare.outputs.notes }}
           releaseDraft: false
           prerelease: ${{ contains(needs.prepare.outputs.tag, '-') }}
-          includeUpdaterJson: true
+          # Stays false until the updater signing keypair exists and its public key
+          # is in tauri.conf.json — see RELEASING.md. Turning it on before then makes
+          # the build fail looking for a key it cannot find.
+          includeUpdaterJson: false
           args: ${{ matrix.args }}
 
   # Publishing the release changes what the download page should show, so rebuild it.
