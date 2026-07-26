@@ -1,0 +1,23 @@
+# Normalise line endings so the same checkout is byte-identical on every platform.
+#
+# Without this, Windows checks files out with CRLF while ts-rs writes the generated
+# bindings with LF — which made CI's "generated types are current" check fail on
+# Windows even though nothing had actually drifted.
+* text=auto eol=lf
+
+# Binary assets must never be touched.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.icns  binary
+*.dmg   binary
+*.msi   binary
+*.exe   binary
+*.woff  binary
+*.woff2 binary
+
+# Windows-only scripts genuinely need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
