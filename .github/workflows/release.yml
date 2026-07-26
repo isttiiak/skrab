@@ -1,0 +1,169 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Generates the release notes once, so every platform build attaches to the same
+  # draft rather than racing to create it.
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      notes: ${{ steps.notes.outputs.notes }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: meta
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=$TAG"            >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}"    >> "$GITHUB_OUTPUT"
+
+      - name: Build release notes from Conventional Commits
+        id: notes
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          PREV=$(git tag --sort=-creatordate | grep -v "^${TAG}$" | head -n1 || true)
+          RANGE=${PREV:+$PREV..}${TAG}
+          [ -z "$PREV" ] && RANGE=$TAG
+
+          section() {
+            local title="$1" pattern="$2"
+            local body
+            body=$(git log --no-merges --pretty=format:'%s|%h' "$RANGE" 2>/dev/null \
+              | grep -E "^${pattern}" || true)
+            [ -z "$body" ] && return
+            printf '### %s\n' "$title"
+            while IFS='|' read -r subject hash; do
+              # Strip the conventional-commit prefix; keep the scope as a label.
+              clean=$(printf '%s' "$subject" | sed -E 's/^[a-z]+(\([^)]*\))?!?: *//')
+              scope=$(printf '%s' "$subject" | sed -nE 's/^[a-z]+\(([^)]*)\).*/\1/p')
+              if [ -n "$scope" ]; then
+                printf -- '- **%s**: %s (`%s`)\n' "$scope" "$clean" "$hash"
+              else
+                printf -- '- %s (`%s`)\n' "$clean" "$hash"
+              fi
+            done <<< "$body"
+            printf '\n'
+          }
+
+          {
+            section 'Features'      'feat'
+            section 'Fixes'         'fix'
+            section 'Performance'   'perf'
+            section 'Documentation' 'docs'
+            section 'Maintenance'   '(chore|refactor|build|ci|test)'
+
+            if [ -n "$PREV" ]; then
+              printf '**Full changelog**: https://github.com/%s/compare/%s...%s\n\n' \
+                "$GITHUB_REPOSITORY" "$PREV" "$TAG"
+            fi
+          } > notes.md
+
+          {
+            echo 'notes<<RELEASE_NOTES_EOF'
+            cat notes.md
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          echo '--- generated notes ---'
+          cat notes.md
+
+  build:
+    name: Build ${{ matrix.label }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS (Apple silicon)
+            args: '--target aarch64-apple-darwin'
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            label: macOS (Intel)
+            args: '--target x86_64-apple-darwin'
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            label: Windows (x64)
+            args: ''
+            target: ''
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: ${{ matrix.target }}
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Updater signing. Generate once with:
+          #   pnpm --filter @skrab/desktop tauri signer generate -w ~/.tauri/skrab.key
+          # then store the private key and password as repository secrets, and put the
+          # public key in tauri.conf.json under plugins.updater.pubkey.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ needs.prepare.outputs.tag }}
+          releaseName: Skrab ${{ needs.prepare.outputs.version }}
+          releaseBody: ${{ needs.prepare.outputs.notes }}
+          releaseDraft: false
+          prerelease: ${{ contains(needs.prepare.outputs.tag, '-') }}
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
+
+  # Publishing the release changes what the download page should show, so rebuild it.
+  refresh-landing:
+    name: Refresh landing page
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Trigger Cloudflare Pages deploy
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::notice::CLOUDFLARE_DEPLOY_HOOK is not set; skipping landing rebuild."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" && echo "deploy hook fired"

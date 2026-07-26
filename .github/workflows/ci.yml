@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Skrab is desktop-only; keep debug info out of CI artifacts to save cache space.
+  CARGO_PROFILE_DEV_DEBUG: 0
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint and format check
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build landing page
+        run: pnpm --filter @skrab/landing build
+
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS and Windows only — Linux is Phase 6, and testing a platform we do
+        # not ship would just produce noise.
+        os: [macos-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: apps/desktop/src-tauri
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test
+
+      - name: Generated IPC types are committed and current
+        # ts-rs writes the TypeScript during `cargo test`. If the checkout is dirty
+        # afterwards, someone changed a Rust type without committing the regenerated
+        # bindings — which would break the frontend build on the next clean checkout.
+        shell: bash
+        working-directory: .
+        run: |
+          if [[ -n "$(git status --porcelain packages/ipc-types/src/generated)" ]]; then
+            echo "::error::Generated IPC types are out of date. Run 'cargo test' in apps/desktop/src-tauri and commit the result."
+            git --no-pager diff -- packages/ipc-types/src/generated
+            exit 1
+          fi
