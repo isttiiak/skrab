@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
 import { ClipboardPanel } from '@/components/clipboard/ClipboardPanel';
+import { PinnedWidget } from '@/components/pins/PinnedWidget';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { getSettings } from '@/lib/tauri';
 
@@ -38,6 +39,12 @@ function useTheme() {
 export function App() {
   const [view, setView] = useState<View>('clips');
   useTheme();
+
+  // The pinned widget is a second window loading the same bundle; the query string
+  // decides which surface to render rather than pulling in a router for two views.
+  if (new URLSearchParams(window.location.search).get('view') === 'pins') {
+    return <PinnedWidget />;
+  }
 
   return (
     <main className="h-full">

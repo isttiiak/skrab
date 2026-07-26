@@ -35,4 +35,9 @@ skipSecretPatterns: boolean,
 /**
  * `system` | `light` | `dark`
  */
-theme: string, launchAtLogin: boolean, };
+theme: string, launchAtLogin: boolean, 
+/**
+ * Send Cmd/Ctrl+V after copying from the pinned widget.
+ * Off by default: on macOS this needs Accessibility permission.
+ */
+autoPaste: boolean, };

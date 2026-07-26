@@ -3,6 +3,7 @@ mod commands;
 mod db;
 mod error;
 mod hotkeys;
+mod input;
 mod screenshot;
 mod security;
 mod settings;
@@ -100,6 +101,9 @@ pub fn run() {
             commands::list_monitors,
             commands::list_capturable_windows,
             commands::capture_screen,
+            commands::toggle_pins_widget,
+            commands::close_pins_widget,
+            commands::paste_clip,
             commands::hide_panel,
             commands::open_data_dir,
         ])

@@ -72,6 +72,24 @@ export function setMonitoring(enabled: boolean): Promise<void> {
   return call<void>('set_monitoring', { enabled });
 }
 
+// ---------------------------------------------------------------- smart paste
+
+/**
+ * Copies a pinned clip, and pastes it into the app behind when the user has
+ * enabled auto-paste. Resolves to `true` only if a keystroke was actually sent.
+ */
+export function pasteClip(id: string): Promise<boolean> {
+  return call<boolean>('paste_clip', { id });
+}
+
+export function togglePinsWidget(): Promise<void> {
+  return call<void>('toggle_pins_widget');
+}
+
+export function closePinsWidget(): Promise<void> {
+  return call<void>('close_pins_widget');
+}
+
 // ------------------------------------------------------------------- window
 
 export function hidePanel(): Promise<void> {

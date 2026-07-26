@@ -145,6 +145,18 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
           </Field>
         </Section>
 
+        <Section title="Smart paste">
+          <Toggle
+            label="Paste automatically"
+            hint="After clicking a pinned item, send Cmd/Ctrl+V to the app behind. Needs Accessibility permission on macOS."
+            checked={settings.autoPaste}
+            onChange={(v) => void patch({ autoPaste: v })}
+          />
+          <p className="text-muted-foreground text-[10px]">
+            Left off, clicking a pinned item just copies it and you paste yourself.
+          </p>
+        </Section>
+
         <Section title="General">
           <Toggle
             label="Launch at login"

@@ -49,6 +49,12 @@ ts-rs = { version = "12", features = ["serde-compat", "no-serde-warnings"] }
 thiserror = "2"
 log = "0.4"
 
+# Simulated keystrokes for auto-paste. Gated by a runtime setting (off by default)
+# rather than a cargo feature, so a shipped build can offer it once the user opts in.
+enigo = "0.6"
+# `time` only: the paste path needs a short async pause for focus to settle.
+tokio = { version = "1", features = ["time"] }
+
 # Utilities
 uuid = { version = "1", features = ["v4", "serde"] }
 blake3 = "1"
@@ -85,9 +91,6 @@ windows = { version = "0.62", features = [
 
 [features]
 default = []
-# Simulated keystrokes for Phase 5 auto-paste. Off by default: it needs macOS
-# Accessibility permission, which is a meaningful trust ask.
-auto-paste = []
 
 [profile.release]
 # This runs in the background all day. Optimize for size and startup.

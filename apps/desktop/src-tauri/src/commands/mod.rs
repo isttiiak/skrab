@@ -168,6 +168,55 @@ pub fn set_monitoring(monitor: State<'_, MonitorState>, enabled: bool) {
     monitor.set_enabled(enabled);
 }
 
+// ---------------------------------------------------------------- smart paste
+
+#[tauri::command]
+pub fn toggle_pins_widget(app: AppHandle) {
+    crate::window::toggle_pins(&app);
+}
+
+#[tauri::command]
+pub fn close_pins_widget(app: AppHandle) -> Result<()> {
+    if let Some(window) = app.get_webview_window(crate::window::PINS) {
+        window.hide()?;
+    }
+    Ok(())
+}
+
+/// Copies a pinned clip and, if the user has opted in, pastes it into the app behind.
+///
+/// Returns whether a keystroke was actually sent, so the widget can tell the user
+/// "copied" versus "pasted" honestly instead of claiming something it did not do.
+#[tauri::command]
+pub async fn paste_clip(
+    app: AppHandle,
+    db: State<'_, Database>,
+    monitor: State<'_, MonitorState>,
+    settings: State<'_, SettingsState>,
+    id: String,
+) -> Result<bool> {
+    copy_clip(db, monitor, id)?;
+
+    if !settings.read().auto_paste {
+        return Ok(false);
+    }
+
+    // The keystroke has to land in the app the user was working in, so the widget
+    // must lose focus first. Hiding and waiting is the only portable way to get
+    // there — without the pause the paste races the window manager.
+    if let Some(window) = app.get_webview_window(crate::window::PINS) {
+        window.hide()?;
+    }
+    tokio::time::sleep(crate::input::FOCUS_SETTLE).await;
+
+    crate::input::send_paste()?;
+
+    if let Some(window) = app.get_webview_window(crate::window::PINS) {
+        window.show()?;
+    }
+    Ok(true)
+}
+
 // ---------------------------------------------------------------- screenshots
 
 /// A capture that has been taken and recorded.

@@ -54,6 +54,9 @@ pub struct AppSettings {
     /// `system` | `light` | `dark`
     pub theme: String,
     pub launch_at_login: bool,
+    /// Send Cmd/Ctrl+V after copying from the pinned widget.
+    /// Off by default: on macOS this needs Accessibility permission.
+    pub auto_paste: bool,
 }
 
 impl Default for AppSettings {
@@ -67,6 +70,7 @@ impl Default for AppSettings {
             skip_secret_patterns: true,
             theme: "system".to_owned(),
             launch_at_login: false,
+            auto_paste: false,
         }
     }
 }
