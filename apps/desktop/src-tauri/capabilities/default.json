@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Baseline permissions for the Skrab panel window. Deliberately narrow: the webview renders untrusted copied content, so it gets no filesystem, shell, or SQL access. Everything system-level goes through typed Rust commands.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging",
+    "os:default",
+    "process:default",
+    "store:default",
+    "opener:allow-open-url",
+    "notification:default",
+    "global-shortcut:default",
+    "autostart:default"
+  ]
+}

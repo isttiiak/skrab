@@ -1,0 +1,94 @@
+[package]
+name = "skrab"
+version = "0.1.0"
+description = "Copy smarter. Paste faster. Edit anything."
+authors = ["Istiak <triistiak@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/isttiiak/Skrab"
+edition = "2024"
+rust-version = "1.85"
+
+[lib]
+# Tauri v2 keeps app logic in a lib so the mobile entrypoints can share it.
+name = "skrab_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# protocol-asset lets the webview render clip images and screenshots straight from
+# disk (scoped in tauri.conf.json) instead of base64-ing them across the IPC bridge.
+tauri = { version = "2.11", features = ["tray-icon", "image-png", "protocol-asset"] }
+
+# Storage — Rust owns the database. The webview never sees SQL.
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+
+# Clipboard access. Isolated behind `crate::clipboard` so it stays swappable.
+arboard = { version = "3.6", features = ["image-data"] }
+# PNG for the stored full-size image, JPEG for list thumbnails. JPEG keeps a 128px
+# thumb around 3-5KB, which matters because thumbs are base64'd into the list payload.
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+base64 = "0.23"
+
+# OS keychain for the database key (macOS Keychain / Windows Credential Manager)
+# The default `v1` feature enables the native backends (macOS Keychain, Windows
+# Credential Manager) and the classic `Entry` API.
+keyring = "4"
+
+# Serialization + generated TypeScript types
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ts-rs = { version = "12", features = ["serde-compat", "no-serde-warnings"] }
+
+# Errors & logging
+thiserror = "2"
+log = "0.4"
+
+# Utilities
+uuid = { version = "1", features = ["v4", "serde"] }
+blake3 = "1"
+parking_lot = "0.12"
+getrandom = "0.3"
+
+# Tauri plugins
+tauri-plugin-log = "2"
+tauri-plugin-store = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
+tauri-plugin-window-state = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-notification = "2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSPasteboard", "NSWorkspace", "NSRunningApplication"] }
+objc2-foundation = { version = "0.3", features = ["NSString", "NSArray"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_System_DataExchange",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[features]
+default = []
+# Simulated keystrokes for Phase 5 auto-paste. Off by default: it needs macOS
+# Accessibility permission, which is a meaningful trust ask.
+auto-paste = []
+
+[profile.release]
+# This runs in the background all day. Optimize for size and startup.
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
