@@ -58,7 +58,6 @@
     "shortDescription": "Clipboard manager, screenshot tool, and smart paste workspace.",
     "longDescription": "Skrab replaces the default OS clipboard with a searchable history, a screenshot capture and annotation tool, and a smart paste workspace. Everything stays on your machine.",
     "copyright": "Copyright © 2026 Istiak. MIT licensed.",
-    "licenseFile": "../../../LICENSE",
     "macOS": {
       "minimumSystemVersion": "11.0"
     },
