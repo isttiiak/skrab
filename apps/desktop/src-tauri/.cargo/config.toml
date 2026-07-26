@@ -1,0 +1,5 @@
+# ts-rs writes generated TypeScript here (see packages/ipc-types/README.md).
+# `relative = true` resolves against this config file's parent directory,
+# i.e. apps/desktop/src-tauri/.
+[env]
+TS_RS_EXPORT_DIR = { value = "../../../packages/ipc-types/src/generated", relative = true }

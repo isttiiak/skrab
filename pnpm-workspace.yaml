@@ -1,0 +1,50 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Single source of truth for dependency versions across every workspace package.
+# Bump here, not in individual package.json files.
+catalog:
+  # Core
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  "@types/react": ^19.2.17
+  "@types/react-dom": ^19.2.3
+  "@types/node": ^26.1.1
+  typescript: ^7.0.2
+
+  # Build
+  vite: ^8.1.5
+  "@vitejs/plugin-react": ^6.0.4
+  vitest: ^4.1.10
+
+  # Tauri
+  "@tauri-apps/api": ^2.11.1
+  "@tauri-apps/cli": ^2.11.4
+  "@tauri-apps/plugin-global-shortcut": ^2.3.0
+  "@tauri-apps/plugin-updater": ^2.10.1
+  "@tauri-apps/plugin-autostart": ^2.5.0
+  "@tauri-apps/plugin-notification": ^2.3.0
+  "@tauri-apps/plugin-store": ^2.4.0
+  "@tauri-apps/plugin-opener": ^2.5.0
+  "@tauri-apps/plugin-os": ^2.3.0
+  "@tauri-apps/plugin-process": ^2.3.0
+
+  # UI
+  tailwindcss: ^4.3.3
+  "@tailwindcss/vite": ^4.3.3
+  zustand: ^5.0.14
+  sonner: ^2.0.7
+  konva: ^10.3.0
+  react-konva: ^19.2.5
+  clsx: ^2.1.1
+  tailwind-merge: ^3.6.0
+  "class-variance-authority": ^0.7.1
+  "lucide-react": ^1.27.0
+
+  # Landing page
+  astro: ^7.1.3
+  "@astrojs/check": ^0.9.9
+
+  # Tooling
+  "@biomejs/biome": ^2.5.5
