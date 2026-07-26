@@ -62,17 +62,49 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
     node?.scrollIntoView({ block: 'nearest' });
   }, [selectedIndex]);
 
-  const copySelected = useCallback(async () => {
+  /**
+   * Puts one clip on the system clipboard.
+   *
+   * Takes an explicit id rather than reading the selection, so a row's own copy
+   * button always copies that row — using `selectedIndex` here meant clicking copy
+   * on a row you had not selected first copied the wrong clip.
+   *
+   * Closing is separate from copying: the row button leaves the panel open so you
+   * can grab several things, while Enter copies and dismisses.
+   */
+  const copyClip = useCallback(
+    async (id: string, { close }: { close: boolean }) => {
+      try {
+        await copy(id);
+      } catch (error) {
+        // Surface the real reason. This used to fall back to a generic message
+        // while the store replaced the whole list with red text, which hid both
+        // the list and the actual cause.
+        toast.error(error instanceof Error ? error.message : 'Could not copy that clip');
+        return;
+      }
+
+      if (!close) {
+        toast.success('Copied');
+        return;
+      }
+
+      try {
+        await hidePanel();
+      } catch {
+        // The copy already succeeded; a window that refused to hide is not a
+        // reason to tell the user the copy failed.
+        toast.success('Copied');
+      }
+    },
+    [copy],
+  );
+
+  const copySelected = useCallback(() => {
     const clip = clips[selectedIndex];
     if (!clip) return;
-    try {
-      await copy(clip.id);
-      toast.success('Copied to clipboard');
-      await hidePanel();
-    } catch {
-      toast.error('Could not copy that clip');
-    }
-  }, [clips, selectedIndex, copy]);
+    void copyClip(clip.id, { close: true });
+  }, [clips, selectedIndex, copyClip]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -87,7 +119,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
           break;
         case 'Enter':
           event.preventDefault();
-          void copySelected();
+          copySelected();
           break;
         case 'Escape':
           event.preventDefault();
@@ -189,7 +221,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
                 clip={clip}
                 selected={index === selectedIndex}
                 onSelect={() => setSelectedIndex(index)}
-                onCopy={() => void copySelected()}
+                onCopy={() => void copyClip(clip.id, { close: false })}
                 onToggleFavorite={() => void toggleFavorite(clip.id)}
                 onTogglePinned={() => void togglePinned(clip.id)}
                 onDelete={() => void remove(clip.id)}
@@ -202,7 +234,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
       <footer className="border-border text-muted-foreground shrink-0 border-t px-3 py-1.5 text-[10px]">
         <span className="flex items-center gap-2.5">
           <Hint keys="↑↓" label="navigate" />
-          <Hint keys="↵" label="paste" />
+          <Hint keys="↵" label="copy & close" />
           <Hint keys="esc" label="close" />
           <span className="ml-auto">{clips.length} shown</span>
         </span>

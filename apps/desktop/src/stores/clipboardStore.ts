@@ -95,12 +95,10 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
   },
 
   async copy(id) {
-    try {
-      await api.copyClip(id);
-    } catch (error) {
-      set({ error: describe(error) });
-      throw error;
-    }
+    // Deliberately does not set `error`: that state replaces the whole list with a
+    // red message, so a single failed copy would blank the history. The caller
+    // shows a toast and the list stays usable.
+    await api.copyClip(id);
   },
 
   async toggleFavorite(id) {

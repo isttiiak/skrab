@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Skrab</title>
   </head>
-  <body class="bg-transparent">
+  <!-- No `bg-transparent` here: that utility beat the themed `background-color` in
+       @layer base, so in dark mode the near-white text rendered on the webview's
+       default white window while the surfaces went dark. -->
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

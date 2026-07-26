@@ -74,11 +74,17 @@ pub fn copy_clip(
     let image_path = db.with(|conn| queries::clip_image_path(conn, &id))?;
 
     let hash = match image_path {
-        Some(path) => clipboard::write_image(&path)?,
+        Some(path) => {
+            log::info!("copying image clip {id} back to the clipboard");
+            clipboard::write_image(&path)?
+        }
         None => {
             let content = db
                 .with(|conn| queries::clip_content(conn, &id))?
-                .ok_or_else(|| Error::Other("clip not found".into()))?;
+                .ok_or_else(|| {
+                    Error::Other(format!("clip {id} has neither text nor an image on disk"))
+                })?;
+            log::info!("copying {} chars back to the clipboard", content.len());
             clipboard::write_text(&content)?
         }
     };

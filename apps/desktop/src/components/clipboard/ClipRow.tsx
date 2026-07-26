@@ -1,5 +1,16 @@
 import type { ClipItem } from '@skrab/ipc-types';
-import { Code2, FileText, Image as ImageIcon, Pin, Star, Trash2, Type } from 'lucide-react';
+import {
+  Check,
+  Code2,
+  Copy,
+  FileText,
+  Image as ImageIcon,
+  Pin,
+  Star,
+  Trash2,
+  Type,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { timeAgo } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -91,7 +102,12 @@ export function ClipRow({
         </span>
       </button>
 
-      {/* Actions stay mounted for keyboard users; only their opacity is hover-gated. */}
+      {/* Actions stay mounted for keyboard users; only their opacity is hover-gated.
+          Copy is always fully visible — it is the primary action on a row, and
+          hiding it behind hover made the list feel read-only. */}
+      <div className="flex shrink-0 items-center gap-0.5">
+        <CopyAction onCopy={onCopy} />
+      </div>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
         <RowAction
           label={clip.isPinned ? 'Unpin' : 'Pin'}
@@ -112,6 +128,43 @@ export function ClipRow({
         </RowAction>
       </div>
     </li>
+  );
+}
+
+/**
+ * Explicit copy button.
+ *
+ * Briefly swaps to a tick so the click is acknowledged even when the panel stays
+ * open — without it there is no feedback that anything happened, because the
+ * clipboard is invisible.
+ */
+function CopyAction({ onCopy }: { onCopy: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1200);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  return (
+    <button
+      type="button"
+      title="Copy to clipboard"
+      aria-label="Copy to clipboard"
+      onClick={() => {
+        setCopied(true);
+        onCopy();
+      }}
+      className={cn(
+        'focus-visible:ring-ring rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none',
+        copied
+          ? 'bg-primary-soft text-primary'
+          : 'text-muted-foreground hover:bg-primary-soft hover:text-primary',
+      )}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
   );
 }
 
