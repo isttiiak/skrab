@@ -26,6 +26,10 @@ rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"]
 
 # Clipboard access. Isolated behind `crate::clipboard` so it stays swappable.
 arboard = { version = "3.6", features = ["image-data"] }
+# Screen capture. Isolated behind `crate::screenshot` so it stays swappable — its
+# macOS backend uses objc2-core-graphics rather than ScreenCaptureKit, which is the
+# part most likely to need replacing on a future macOS.
+xcap = "0.9"
 # PNG for the stored full-size image, JPEG for list thumbnails. JPEG keeps a 128px
 # thumb around 3-5KB, which matters because thumbs are base64'd into the list payload.
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }

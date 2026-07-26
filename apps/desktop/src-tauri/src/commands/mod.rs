@@ -6,6 +6,7 @@ use crate::clipboard::types::{ClipItem, ClipQuery};
 use crate::clipboard::{self, MonitorState};
 use crate::db::{Database, queries};
 use crate::error::{Error, Result};
+use crate::screenshot;
 use crate::settings::{AppSettings, SettingsState};
 
 // Generated TypeScript lands in `packages/ipc-types/src/generated/`. The destination
@@ -165,6 +166,89 @@ pub fn save_settings(
 #[tauri::command]
 pub fn set_monitoring(monitor: State<'_, MonitorState>, enabled: bool) {
     monitor.set_enabled(enabled);
+}
+
+// ---------------------------------------------------------------- screenshots
+
+/// A capture that has been taken and recorded.
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "CaptureResult.ts")]
+#[serde(rename_all = "camelCase")]
+pub struct CaptureResult {
+    pub id: String,
+    /// Absolute path on disk. Render it through Tauri's asset protocol.
+    pub path: String,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[tauri::command]
+pub fn list_monitors() -> Result<Vec<screenshot::MonitorInfo>> {
+    screenshot::capture::list_monitors()
+}
+
+#[tauri::command]
+pub fn list_capturable_windows() -> Result<Vec<screenshot::WindowInfo>> {
+    screenshot::capture::list_windows()
+}
+
+/// Captures a display, a window, or a rectangle, and records it.
+///
+/// One command rather than three: the three modes differ only in which pixels they
+/// select, and everything after that — save, record, hand the path back — is shared.
+#[tauri::command]
+pub fn capture_screen(
+    app: AppHandle,
+    db: State<'_, Database>,
+    mode: screenshot::CaptureMode,
+    monitor_id: Option<u32>,
+    window_id: Option<u32>,
+    region: Option<screenshot::CaptureRegion>,
+) -> Result<CaptureResult> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|_| Error::NoAppDataDir)?
+        .join("screenshots");
+
+    let capture = match mode {
+        screenshot::CaptureMode::Fullscreen => screenshot::capture_monitor(&dir, monitor_id)?,
+        screenshot::CaptureMode::Window => {
+            let id =
+                window_id.ok_or_else(|| Error::Other("window capture needs a window id".into()))?;
+            screenshot::capture_window(&dir, id)?
+        }
+        screenshot::CaptureMode::Region => {
+            let region =
+                region.ok_or_else(|| Error::Other("region capture needs a rectangle".into()))?;
+            screenshot::capture_region(&dir, region)?
+        }
+    };
+
+    let path = capture.path.to_string_lossy().into_owned();
+    let id = db.with(|conn| {
+        queries::insert_screenshot(
+            conn,
+            &path,
+            capture.mode.as_str(),
+            capture.width,
+            capture.height,
+        )
+    })?;
+
+    log::info!(
+        "captured {}x{} ({})",
+        capture.width,
+        capture.height,
+        capture.mode.as_str()
+    );
+
+    Ok(CaptureResult {
+        id,
+        path,
+        width: capture.width,
+        height: capture.height,
+    })
 }
 
 // ---------------------------------------------------------------- window

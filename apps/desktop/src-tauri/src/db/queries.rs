@@ -308,6 +308,29 @@ pub fn purge(conn: &Connection, settings: &AppSettings) -> Result<Vec<String>> {
     Ok(doomed)
 }
 
+// ---------------------------------------------------------------- screenshots
+
+/// Records a capture. Returns the new row's id.
+pub fn insert_screenshot(
+    conn: &Connection,
+    path: &str,
+    mode: &str,
+    width: u32,
+    height: u32,
+) -> Result<String> {
+    let id = uuid::Uuid::new_v4().to_string();
+    let now = now_millis();
+
+    conn.execute(
+        "INSERT INTO screenshots
+            (id, image_path, capture_mode, width, height, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+        params![id, path, mode, width as i64, height as i64, now],
+    )?;
+
+    Ok(id)
+}
+
 pub fn count_clips(conn: &Connection) -> Result<i64> {
     conn.query_row(
         "SELECT count(*) FROM clip_items WHERE deleted_at IS NULL",
