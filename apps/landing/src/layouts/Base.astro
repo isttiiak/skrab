@@ -1,0 +1,197 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const path = Astro.url.pathname;
+
+const NAV = [
+  { href: '/#features', label: 'Features' },
+  { href: '/#privacy', label: 'Privacy' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/changelog', label: 'Changelog' },
+];
+
+const isActive = (href: string) => href !== '/' && path.startsWith(href.split('#')[0] ?? '');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href={new URL(path, Astro.site)} />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318242e'/%3E%3Crect x='7' y='6' width='13' height='17' rx='3' fill='%235d7080'/%3E%3Crect x='12' y='10' width='13' height='17' rx='3' fill='%23f2f6f8'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a href="/" class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Skrab</span>
+        </a>
+
+        <nav aria-label="Main">
+          {
+            NAV.map((item) => (
+              <a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]}>
+                {item.label}
+              </a>
+            ))
+          }
+          <a
+            href="https://github.com/isttiiak/skrab"
+            class="nav-link"
+            rel="noopener noreferrer"
+            target="_blank">GitHub</a
+          >
+        </nav>
+
+        <a href="/download" class="btn btn-primary nav-cta">Download</a>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-inner">
+        <div>
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>Skrab</span>
+          </a>
+          <p class="dim" style="font-size:.85rem;margin-top:.5rem">
+            Copy smarter. Paste faster. Edit anything.
+          </p>
+        </div>
+        <div class="foot-links">
+          <a href="/download">Download</a>
+          <a href="/docs">Docs</a>
+          <a href="/changelog">Changelog</a>
+          <a href="https://github.com/isttiiak/skrab" rel="noopener noreferrer" target="_blank"
+            >Source</a
+          >
+        </div>
+      </div>
+      <div class="wrap foot-legal">
+        <span class="dim">MIT licensed · © 2026 Istiak</span>
+        <span class="dim">Your clipboard never leaves your machine.</span>
+      </div>
+    </footer>
+
+    <style>
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(14px);
+        background: color-mix(in srgb, var(--bg) 76%, transparent);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        height: 60px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-weight: 640;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        background: var(--grad-brand);
+        box-shadow: var(--shadow-glow);
+      }
+
+      nav {
+        display: flex;
+        gap: 1.35rem;
+        margin-left: auto;
+        font-size: 0.92rem;
+      }
+
+      .nav-link {
+        color: var(--ink-muted);
+        transition: color 0.15s ease;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: var(--ink);
+      }
+
+      .nav-cta {
+        padding: 0.45rem 0.95rem;
+        font-size: 0.87rem;
+      }
+
+      .foot {
+        border-top: 1px solid var(--border);
+        margin-top: 4rem;
+        padding-block: 2.5rem 1.75rem;
+      }
+
+      .foot-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: space-between;
+      }
+
+      .foot-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        font-size: 0.9rem;
+        color: var(--ink-muted);
+      }
+
+      .foot-links a:hover {
+        color: var(--teal);
+      }
+
+      .foot-legal {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 720px) {
+        nav {
+          display: none;
+        }
+        .nav-cta {
+          margin-left: auto;
+        }
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,535 @@
+---
+import Base from '../layouts/Base.astro';
+
+const FEATURES = [
+  {
+    tone: 'teal',
+    title: 'Clipboard history that remembers',
+    body: 'Every copy is saved, searchable, and one keystroke away. Full-text search across thousands of clips returns in milliseconds.',
+    points: ['Text, images and rich text', 'Instant full-text search', 'Star and pin what matters'],
+  },
+  {
+    tone: 'blue',
+    title: 'Screenshots and annotation',
+    body: 'Capture a region, a window, or the whole screen — then highlight, draw, and add text without ever opening another app.',
+    points: [
+      'Region, window, full screen',
+      'Highlight, draw, shapes, text',
+      'Copy or save when done',
+    ],
+    soon: true,
+  },
+  {
+    tone: 'amber',
+    title: 'Smart paste for forms',
+    body: 'Pin several clips to a floating widget, park it beside the form you are filling, and click each value into place.',
+    points: ['Always-on-top widget', 'Click to paste', 'Auto-advance through fields'],
+    soon: true,
+  },
+];
+
+const STEPS = [
+  {
+    n: '01',
+    t: 'Copy as usual',
+    d: 'Skrab watches the system change counter, so it costs effectively nothing while you work.',
+  },
+  {
+    n: '02',
+    t: 'Summon the panel',
+    d: 'Cmd+Shift+V on macOS, Ctrl+Shift+V on Windows. It opens focused and ready to type.',
+  },
+  {
+    n: '03',
+    t: 'Search and paste',
+    d: 'Type a word, arrow to the clip, hit Enter. It lands on your clipboard and the panel disappears.',
+  },
+];
+---
+
+<Base
+  title="Skrab — Copy smarter. Paste faster."
+  description="A lightweight clipboard manager, screenshot tool and smart paste workspace for macOS and Windows. Everything stays on your machine."
+>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <span class="eyebrow">
+        <span class="dot"></span>
+        v0.1 · macOS &amp; Windows
+      </span>
+
+      <h1>
+        Copy smarter.<br />
+        <span class="grad-text">Paste faster.</span>
+      </h1>
+
+      <p class="lede hero-lede">
+        Your OS clipboard remembers one thing. Skrab remembers everything — searchable,
+        organised, and always a keystroke away. Screenshots and smart paste come built in.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/download" class="btn btn-primary">Download for free</a>
+        <a href="/docs" class="btn btn-ghost">Read the docs</a>
+      </div>
+
+      <p class="dim hero-note">
+        Free and open source · No account · Nothing leaves your machine
+      </p>
+
+      <div class="preview card" aria-hidden="true">
+        <div class="preview-bar">
+          <span></span><span></span><span></span>
+          <em>Skrab</em>
+        </div>
+        <div class="preview-body">
+          <div class="preview-search">Search your clipboard…</div>
+          <div class="chips">
+            <span class="chip on">All</span>
+            <span class="chip">Text</span>
+            <span class="chip">Images</span>
+            <span class="chip">Starred</span>
+          </div>
+          <div class="rows">
+            <div class="row sel">
+              <span class="ico grad"></span>
+              <span>
+                <b>https://github.com/isttiiak/skrab</b>
+                <i>Safari · now</i>
+              </span>
+            </div>
+            <div class="row">
+              <span class="ico"></span>
+              <span>
+                <b>docker compose up -d --build</b>
+                <i>Terminal · 4m</i>
+              </span>
+            </div>
+            <div class="row">
+              <span class="ico warm"></span>
+              <span>
+                <b>Image · 1920×1080</b>
+                <i>Screenshot · 12m</i>
+              </span>
+            </div>
+            <div class="row">
+              <span class="ico"></span>
+              <span>
+                <b>invoice-2026-07.pdf</b>
+                <i>Finder · 1h</i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Three tools, one tray icon</h2>
+        <p class="lede">
+          Clipboard history, screen capture and form filling usually mean three separate
+          apps. Skrab is one, and it stays out of your way until you need it.
+        </p>
+      </div>
+
+      <div class="grid">
+        {
+          FEATURES.map((f) => (
+            <article class="card feature">
+              <span class:list={['feature-bar', f.tone]} />
+              <div class="feature-head">
+                <h3>{f.title}</h3>
+                {f.soon && <span class="soon">Coming soon</span>}
+              </div>
+              <p class="muted">{f.body}</p>
+              <ul>
+                {f.points.map((p) => (
+                  <li>{p}</li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section steps-section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>It fits the way you already work</h2>
+        <p class="lede">No new habits. Copy the way you always have.</p>
+      </div>
+      <div class="steps">
+        {
+          STEPS.map((s) => (
+            <div class="step">
+              <span class="step-n grad-text">{s.n}</span>
+              <h3>{s.t}</h3>
+              <p class="muted">{s.d}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="card privacy">
+        <div>
+          <span class="eyebrow">Privacy</span>
+          <h2>Your clipboard never leaves your machine</h2>
+          <p class="lede" style="margin-top:.85rem">
+            Clipboard history is the most sensitive data on your computer — passwords,
+            tokens, private messages. So Skrab keeps all of it in an encrypted database
+            in your own app data folder. No account, no telemetry, no server.
+          </p>
+        </div>
+        <ul class="privacy-list">
+          <li>
+            <b>Encrypted at rest</b>
+            <span class="muted">SQLCipher, with the key held in your OS keychain.</span>
+          </li>
+          <li>
+            <b>Passwords are skipped</b>
+            <span class="muted"
+              >Skrab honours the concealed-clipboard markers that password managers set,
+              so copied secrets are never recorded.</span
+            >
+          </li>
+          <li>
+            <b>Blocklist any app</b>
+            <span class="muted">Name an app and Skrab will never record from it.</span>
+          </li>
+          <li>
+            <b>Auditable</b>
+            <span class="muted">MIT licensed. Read every line on GitHub.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap cta">
+      <h2>Ready when you are</h2>
+      <!-- No memory figure here until it is measured on a release build. -->
+      <p class="lede">Free, open source, and out of your way until you need it.</p>
+      <a href="/download" class="btn btn-primary" style="margin-top:1.5rem">Download Skrab</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 9vw, 6rem) 1rem;
+    text-align: center;
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 22%, transparent);
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 7vw, 4.4rem);
+    margin-block: 1.5rem 0;
+    font-weight: 680;
+  }
+
+  .hero-lede {
+    max-width: 40rem;
+    margin-top: 1.25rem;
+    font-size: clamp(1rem, 1.7vw, 1.15rem);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .hero-note {
+    font-size: 0.83rem;
+    margin-top: 1rem;
+  }
+
+  /* --- app preview mock --- */
+  .preview {
+    width: min(440px, 100%);
+    margin-top: 3.5rem;
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-raised) 80%, transparent);
+  }
+
+  .preview-bar span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  .preview-bar em {
+    margin-left: auto;
+    font-style: normal;
+    font-size: 0.76rem;
+    color: var(--ink-dim);
+  }
+
+  .preview-body {
+    padding: 0.9rem;
+  }
+
+  .preview-search {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    background: color-mix(in srgb, var(--bg) 40%, transparent);
+  }
+
+  .chips {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.7rem;
+  }
+
+  .chip {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    background: color-mix(in srgb, var(--bg) 50%, transparent);
+  }
+
+  .chip.on {
+    background: var(--grad-brand);
+    color: #06181c;
+    font-weight: 560;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.7rem;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 9px;
+    border: 1px solid transparent;
+  }
+
+  .row.sel {
+    border-color: color-mix(in srgb, var(--teal) 40%, transparent);
+    background: color-mix(in srgb, var(--teal) 11%, transparent);
+  }
+
+  .ico {
+    width: 27px;
+    height: 27px;
+    border-radius: 7px;
+    flex: none;
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+
+  .ico.grad {
+    background: var(--grad-brand);
+  }
+
+  .ico.warm {
+    background: var(--grad-warm);
+  }
+
+  .row b {
+    display: block;
+    font-size: 0.83rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+  }
+
+  .row i {
+    font-style: normal;
+    font-size: 0.71rem;
+    color: var(--ink-dim);
+  }
+
+  /* --- features --- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
+    gap: 1.1rem;
+  }
+
+  .feature {
+    position: relative;
+    padding: 1.6rem 1.4rem 1.4rem;
+    overflow: hidden;
+  }
+
+  .feature-bar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+  }
+
+  .feature-bar.teal {
+    background: linear-gradient(90deg, var(--teal), var(--cyan));
+  }
+  .feature-bar.blue {
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+  }
+  .feature-bar.amber {
+    background: var(--grad-warm);
+  }
+
+  .feature-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+
+  .feature h3 {
+    font-size: 1.1rem;
+  }
+
+  .soon {
+    flex: none;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+    color: var(--amber);
+  }
+
+  .feature ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+  }
+
+  .feature li {
+    padding-left: 1.15rem;
+    position: relative;
+    color: var(--ink-muted);
+  }
+
+  .feature li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--teal);
+  }
+
+  /* --- steps --- */
+  .steps-section {
+    border-block: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-raised) 45%, transparent);
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+  }
+
+  .step-n {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .step h3 {
+    font-size: 1.05rem;
+    margin-block: 0.45rem 0.4rem;
+  }
+
+  .step p {
+    font-size: 0.92rem;
+  }
+
+  /* --- privacy --- */
+  .privacy {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    padding: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .privacy h2 {
+    font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+    margin-top: 1rem;
+  }
+
+  .privacy-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .privacy-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-left: 1rem;
+    border-left: 2px solid color-mix(in srgb, var(--teal) 55%, transparent);
+    font-size: 0.92rem;
+  }
+
+  /* --- cta --- */
+  .cta {
+    text-align: center;
+  }
+
+  .cta h2 {
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    margin-bottom: 0.6rem;
+  }
+</style>

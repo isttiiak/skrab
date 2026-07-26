@@ -1,0 +1,483 @@
+---
+import Base from '../layouts/Base.astro';
+
+const TOC = [
+  { id: 'install-macos', label: 'Install on macOS' },
+  { id: 'macos-gatekeeper', label: '— "Skrab is damaged"' },
+  { id: 'install-windows', label: 'Install on Windows' },
+  { id: 'windows-smartscreen', label: '— SmartScreen warning' },
+  { id: 'first-run', label: 'First run' },
+  { id: 'shortcuts', label: 'Keyboard shortcuts' },
+  { id: 'privacy', label: 'Privacy & passwords' },
+  { id: 'build', label: 'Build from source' },
+  { id: 'troubleshooting', label: 'Troubleshooting' },
+];
+---
+
+<Base
+  title="Skrab docs — install &amp; usage"
+  description="How to install and use Skrab on macOS and Windows, including Gatekeeper and SmartScreen workarounds."
+>
+  <section class="head">
+    <div class="wrap">
+      <span class="eyebrow">Documentation</span>
+      <h1>Getting started</h1>
+      <p class="lede">Install, first run, shortcuts, and the things that trip people up.</p>
+    </div>
+  </section>
+
+  <div class="wrap layout">
+    <aside>
+      <nav aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        {TOC.map((item) => <a href={`#${item.id}`}>{item.label}</a>)}
+      </nav>
+    </aside>
+
+    <article class="doc">
+      <section id="install-macos">
+        <h2>Install on macOS</h2>
+        <p class="muted">Requires macOS 11 (Big Sur) or newer. Apple silicon and Intel.</p>
+        <ol>
+          <li>Download the <code>.dmg</code> from the <a href="/download">download page</a>.</li>
+          <li>Open it and drag <b>Skrab</b> into your Applications folder.</li>
+          <li>Launch it. The first launch will be blocked — see the next section.</li>
+          <li>Skrab lives in the menu bar. There is no dock icon and no main window.</li>
+        </ol>
+      </section>
+
+      <section id="macos-gatekeeper">
+        <h2>"Skrab is damaged" or "cannot be opened"</h2>
+        <div class="callout amber">
+          <b>This is expected, and Skrab is not damaged.</b>
+          <p>
+            Builds are currently unsigned because an Apple Developer certificate costs
+            $99/year — money this project does not spend before it has users. macOS shows
+            the same warning for every unsigned app.
+          </p>
+        </div>
+        <p>
+          On macOS 15 Sequoia and macOS 26 Tahoe, the old right-click → <b>Open</b> trick
+          no longer works. Do this instead:
+        </p>
+        <ol>
+          <li>Try to open Skrab once and dismiss the warning.</li>
+          <li>
+            Open <b>System Settings → Privacy &amp; Security</b>.
+          </li>
+          <li>
+            Scroll to the <b>Security</b> section. You will see
+            <i>"Skrab was blocked to protect your Mac."</i>
+          </li>
+          <li>Click <b>Open Anyway</b>, then confirm with Touch ID or your password.</li>
+        </ol>
+        <p class="muted">You only have to do this once, not on every update.</p>
+        <details>
+          <summary>Or use the command line</summary>
+          <pre
+            class="scroll-x"><code>xattr -dr com.apple.quarantine /Applications/Skrab.app</code></pre>
+          <p class="muted small">
+            This strips the download quarantine flag. Only run it on software you trust
+            and downloaded yourself.
+          </p>
+        </details>
+      </section>
+
+      <section id="install-windows">
+        <h2>Install on Windows</h2>
+        <p class="muted">Windows 10 and Windows 11, 64-bit.</p>
+        <ol>
+          <li>Download the <code>.msi</code> installer from the <a href="/download">download page</a>.</li>
+          <li>
+            Double-click it. If SmartScreen appears, see
+            <a href="#windows-smartscreen">the next section</a>.
+          </li>
+          <li>Follow the installer. Skrab installs to <code>Program Files</code>.</li>
+          <li>
+            Skrab starts minimised to the notification area. If you do not see the icon,
+            click the <b>^</b> arrow next to the clock and drag Skrab onto the taskbar so
+            it stays visible.
+          </li>
+        </ol>
+        <div class="callout teal">
+          <b>WebView2 is required.</b>
+          <p>
+            Windows 11 ships with it already. On older Windows 10 builds the installer will
+            fetch it automatically — allow it through if prompted.
+          </p>
+        </div>
+      </section>
+
+      <section id="windows-smartscreen">
+        <h2>"Windows protected your PC" (SmartScreen)</h2>
+        <p>
+          SmartScreen warns about installers it has not seen many times before. To
+          continue:
+        </p>
+        <ol>
+          <li>Click <b>More info</b> on the blue dialog.</li>
+          <li>Click <b>Run anyway</b>.</li>
+        </ol>
+        <p class="muted">
+          You can verify you have the real file first: every release publishes checksums,
+          and you can compare with
+          <code>Get-FileHash .\Skrab_x64_en-US.msi</code> in PowerShell.
+        </p>
+      </section>
+
+      <section id="first-run">
+        <h2>First run</h2>
+        <ul class="checks">
+          <li>
+            <b>Keychain / Credential Manager prompt.</b> Skrab encrypts its database and
+            stores the key in your OS keychain, so the system asks for permission the
+            first time. Choose <b>Always Allow</b> — Skrab cannot open its own history
+            without it.
+          </li>
+          <li>
+            <b>Copy something.</b> Anything at all. It appears in the panel instantly.
+          </li>
+          <li>
+            <b>Press the hotkey.</b> <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> on macOS,
+            <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> on Windows.
+          </li>
+        </ul>
+      </section>
+
+      <section id="shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <div class="scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>macOS</th>
+                <th>Windows</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Open clipboard history</td>
+                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></td>
+                <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></td>
+              </tr>
+              <tr>
+                <td>Move through the list</td>
+                <td colspan="2"><kbd>↑</kbd> <kbd>↓</kbd></td>
+              </tr>
+              <tr>
+                <td>Copy the selected clip</td>
+                <td colspan="2"><kbd>Enter</kbd></td>
+              </tr>
+              <tr>
+                <td>Clear search / close panel</td>
+                <td colspan="2"><kbd>Esc</kbd></td>
+              </tr>
+              <tr>
+                <td>Search</td>
+                <td colspan="2">Just start typing — the field is already focused</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="privacy">
+        <h2>Privacy &amp; passwords</h2>
+        <p>
+          Clipboard history is the most sensitive data on a computer. Skrab is built so
+          that none of it leaves your machine: no account, no telemetry, no server.
+        </p>
+        <ul class="checks">
+          <li>
+            <b>Passwords are never recorded.</b> Password managers tag copied secrets with
+            a standard "concealed" marker — <code>org.nspasteboard.ConcealedType</code> on
+            macOS, <code>ExcludeClipboardContentFromMonitorProcessing</code> on Windows.
+            Skrab checks for these <i>before</i> anything is written to disk.
+          </li>
+          <li>
+            <b>Tokens are skipped too.</b> Values shaped like API keys, JWTs and private
+            keys are ignored even when the app that copied them sets no marker. You can
+            turn this off in Settings.
+          </li>
+          <li>
+            <b>Blocklist any app.</b> Settings → Privacy → "Never record from".
+          </li>
+          <li>
+            <b>Encrypted at rest.</b> SQLCipher, with the key in your OS keychain.
+          </li>
+        </ul>
+        <p class="muted small">
+          Where the data lives — macOS:
+          <code>~/Library/Application Support/com.isttiiak.skrab/</code>, Windows:
+          <code>%APPDATA%\com.isttiiak.skrab\</code>. Settings → Data → "Open data folder"
+          takes you straight there.
+        </p>
+      </section>
+
+      <section id="build">
+        <h2>Build from source</h2>
+        <p class="muted">Node 22+, pnpm 10+, and a stable Rust toolchain.</p>
+        <pre class="scroll-x"><code>git clone https://github.com/isttiiak/skrab.git
+cd skrab
+pnpm install
+
+# run in development
+pnpm dev
+
+# produce an installer for your platform
+pnpm --filter @skrab/desktop tauri build</code></pre>
+        <p class="muted small">
+          On Windows you also need the Microsoft C++ Build Tools; on macOS, the Xcode
+          Command Line Tools (<code>xcode-select --install</code>).
+        </p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting</h2>
+
+        <details>
+          <summary>The hotkey does nothing</summary>
+          <p>
+            Another app has probably claimed it. Skrab logs a warning and keeps running —
+            open it from the tray icon and pick a different shortcut in Settings.
+          </p>
+        </details>
+
+        <details>
+          <summary>Nothing is being recorded</summary>
+          <p>
+            Check Settings → Capture → "Watch the clipboard" is on. If you are copying from
+            a password manager, that is working as intended. Also check the blocklist.
+          </p>
+        </details>
+
+        <details>
+          <summary>"The database could not be unlocked"</summary>
+          <p>
+            The encryption key is missing from your keychain — usually because the keychain
+            entry was deleted. The existing history cannot be recovered without that key.
+            Delete <code>Skrab.db</code> from the data folder to start fresh.
+          </p>
+        </details>
+
+        <details>
+          <summary>Where are the logs?</summary>
+          <p>
+            macOS: <code>~/Library/Logs/com.isttiiak.skrab/</code>. Windows:
+            <code>%APPDATA%\com.isttiiak.skrab\logs\</code>. Attach them to a
+            <a href="https://github.com/isttiiak/skrab/issues" rel="noopener noreferrer" target="_blank"
+              >GitHub issue</a
+            >.
+          </p>
+        </details>
+      </section>
+    </article>
+  </div>
+</Base>
+
+<style>
+  .head {
+    padding-block: clamp(2.5rem, 7vw, 4rem) 1.5rem;
+  }
+
+  .head h1 {
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    margin-block: 1rem 0.75rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  aside {
+    position: sticky;
+    top: 80px;
+  }
+
+  aside nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.87rem;
+    border-left: 1px solid var(--border);
+    padding-left: 0.9rem;
+  }
+
+  .toc-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  aside a {
+    color: var(--ink-muted);
+    padding-block: 0.15rem;
+    transition: color 0.15s ease;
+  }
+
+  aside a:hover {
+    color: var(--teal);
+  }
+
+  .doc section {
+    padding-bottom: 2.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .doc section:last-child {
+    border-bottom: 0;
+  }
+
+  .doc h2 {
+    font-size: 1.35rem;
+    margin-bottom: 0.6rem;
+    scroll-margin-top: 5rem;
+  }
+
+  .doc p {
+    color: var(--ink-muted);
+    margin-block: 0.65rem;
+  }
+
+  .doc ol,
+  .doc ul {
+    color: var(--ink-muted);
+    padding-left: 1.25rem;
+    margin-block: 0.85rem;
+  }
+
+  .doc li {
+    margin-block: 0.45rem;
+  }
+
+  .doc b {
+    color: var(--ink);
+  }
+
+  .checks {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .checks li {
+    padding-left: 1.4rem;
+    position: relative;
+  }
+
+  .checks li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--grad-brand);
+  }
+
+  .doc a {
+    color: var(--teal);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  code {
+    padding: 0.12rem 0.38rem;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--ink) 11%, transparent);
+    font-size: 0.85em;
+  }
+
+  pre {
+    margin-block: 1rem;
+    padding: 0.95rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-raised) 70%, transparent);
+    font-size: 0.84rem;
+    line-height: 1.75;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    font-family: var(--font);
+    font-size: 0.8em;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--bg-raised) 80%, transparent);
+  }
+
+  .callout {
+    padding: 0.95rem 1.15rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-block: 1rem;
+  }
+
+  .callout p {
+    margin-top: 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .callout.amber {
+    border-left: 3px solid var(--amber);
+    background: color-mix(in srgb, var(--amber) 8%, transparent);
+  }
+
+  .callout.teal {
+    border-left: 3px solid var(--teal);
+    background: color-mix(in srgb, var(--teal) 8%, transparent);
+  }
+
+  details {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-block: 0.6rem;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 540;
+    font-size: 0.93rem;
+  }
+
+  .small {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    aside {
+      position: static;
+    }
+    aside nav {
+      flex-flow: row wrap;
+      gap: 0.75rem;
+      border-left: 0;
+      padding-left: 0;
+    }
+    .toc-title {
+      width: 100%;
+      margin-bottom: 0;
+    }
+  }
+</style>

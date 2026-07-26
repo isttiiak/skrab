@@ -1,0 +1,260 @@
+/* Skrab landing — shared design tokens.
+
+   Palette mirrors the desktop app: deep teal → ocean blue as the primary ramp,
+   warm amber as the single accent, blue-cooled slate neutrals. No purple, no
+   light green. Dark-first, because the product is a developer tool and the hero
+   gradient reads better on a deep ground. */
+
+:root {
+  color-scheme: dark;
+
+  --ink: #eaf1f6;
+  --ink-muted: #9db0be;
+  --ink-dim: #6d8394;
+
+  --bg: #0b1620;
+  --bg-raised: #101f2b;
+  --bg-card: #12242f;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --teal: #2fb3ae;
+  --cyan: #38b6d9;
+  --blue: #3d7fd6;
+  --amber: #f0a23c;
+  --coral: #ef7259;
+
+  --grad-brand: linear-gradient(120deg, var(--teal), var(--cyan) 45%, var(--blue));
+  --grad-warm: linear-gradient(120deg, var(--amber), var(--coral));
+  --grad-ink: linear-gradient(120deg, #ffffff, #b9d4e2);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 18px 60px -22px rgba(47, 179, 174, 0.55);
+
+  --radius: 14px;
+  --maxw: 1120px;
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --ink: #14232e;
+    --ink-muted: #4c6373;
+    --ink-dim: #6b8394;
+
+    --bg: #f6f9fb;
+    --bg-raised: #ffffff;
+    --bg-card: #ffffff;
+    --border: rgba(16, 40, 56, 0.11);
+    --border-strong: rgba(16, 40, 56, 0.2);
+
+    --teal: #17857f;
+    --cyan: #1d8bab;
+    --blue: #2a5fa8;
+    --amber: #c9761a;
+    --coral: #d24f34;
+
+    --grad-ink: linear-gradient(120deg, #0f2432, #29566d);
+    --shadow-card: 0 1px 2px rgba(16, 40, 56, 0.06), 0 12px 30px -14px rgba(16, 40, 56, 0.2);
+    --shadow-glow: 0 18px 60px -24px rgba(23, 133, 127, 0.4);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Ambient gradient wash — two soft pools rather than a single flat tint. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(58% 42% at 14% -6%, rgba(47, 179, 174, 0.2), transparent 62%),
+    radial-gradient(50% 40% at 92% 4%, rgba(61, 127, 214, 0.17), transparent 60%),
+    radial-gradient(44% 36% at 72% 96%, rgba(240, 162, 60, 0.1), transparent 62%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+  margin: 0;
+  font-weight: 650;
+}
+
+p {
+  margin: 0;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+.grad-text {
+  background: var(--grad-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: color-mix(in srgb, var(--bg-raised) 70%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 0.94rem;
+  font-weight: 560;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.btn-primary {
+  background: var(--grad-brand);
+  color: #04161a;
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  border-color: var(--border-strong);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-raised) 60%, transparent);
+}
+
+.btn-ghost:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.section {
+  padding-block: clamp(3.5rem, 8vw, 6.5rem);
+}
+
+.section-head {
+  max-width: 46rem;
+  margin-bottom: 2.5rem;
+}
+
+.section-head h2 {
+  font-size: clamp(1.6rem, 3.6vw, 2.3rem);
+  margin-bottom: 0.75rem;
+}
+
+.lede {
+  color: var(--ink-muted);
+  font-size: 1.03rem;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.dim {
+  color: var(--ink-dim);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  color: var(--ink-muted);
+  font-weight: 560;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Wide content must scroll inside its own box, never the page body. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

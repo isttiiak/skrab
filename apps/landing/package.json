@@ -1,0 +1,23 @@
+{
+  "name": "@skrab/landing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "test": "echo \"no tests in landing\" && exit 0"
+  },
+  "dependencies": {
+    "astro": "catalog:"
+  },
+  "comments": {
+    "typescript": "Pinned to 6.x on purpose. `astro check` needs TypeScript's programmatic API, which the TS 7 native compiler does not expose yet (withastro/roadmap#1321). The desktop app stays on the workspace catalog's TS 7; only this package steps back. Move it to `catalog:` once Astro supports TS 7."
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:",
+    "typescript": "6.0.3"
+  }
+}
