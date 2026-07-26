@@ -135,6 +135,7 @@ pub fn get_settings(state: State<'_, SettingsState>) -> AppSettings {
 
 #[tauri::command]
 pub fn save_settings(
+    app: AppHandle,
     db: State<'_, Database>,
     state: State<'_, SettingsState>,
     monitor: State<'_, MonitorState>,
@@ -144,6 +145,7 @@ pub fn save_settings(
 
     db.with(|conn| crate::settings::save(conn, &settings))?;
     monitor.set_enabled(settings.monitoring_enabled);
+    apply_autostart(&app, settings.launch_at_login);
     state.replace(settings.clone());
 
     // A tighter retention or item cap should take effect immediately, not at the
@@ -173,6 +175,31 @@ pub fn open_data_dir(app: AppHandle) -> Result<()> {
     tauri_plugin_opener::open_path(dir.to_string_lossy().to_string(), None::<&str>)
         .map_err(|e| Error::Other(format!("could not open the data folder: {e}")))
 }
+
+/// Registers or removes the login item to match the setting.
+///
+/// Persisting the preference is not enough — the OS keeps its own list, so the
+/// toggle has to actually reach the autostart plugin. Failures are logged rather
+/// than surfaced: the rest of the save succeeded, and a login item that could not be
+/// written is not worth discarding the user's other changes over.
+#[cfg(desktop)]
+fn apply_autostart(app: &AppHandle, enabled: bool) {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let manager = app.autolaunch();
+    let result = if enabled {
+        manager.enable()
+    } else {
+        manager.disable()
+    };
+
+    if let Err(e) = result {
+        log::warn!("could not update the launch-at-login setting: {e}");
+    }
+}
+
+#[cfg(not(desktop))]
+fn apply_autostart(_app: &AppHandle, _enabled: bool) {}
 
 /// Unix epoch milliseconds. The single time source for every persisted timestamp.
 pub fn now_millis() -> i64 {
