@@ -1,8 +1,36 @@
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use crate::error::Result;
 
 pub const MAIN: &str = "main";
+/// The annotation editor.
+pub const EDITOR: &str = "editor";
+
+/// Opens the annotation editor on one image clip.
+///
+/// Its own window rather than a view inside the panel: the panel is a 440px summoned
+/// overlay, and annotating a 1920px screenshot in it would be miserable.
+pub fn open_editor(app: &AppHandle, clip_id: &str) -> Result<()> {
+    // Rebuilt each time so it always opens on the clip that was asked for.
+    if let Some(existing) = app.get_webview_window(EDITOR) {
+        existing.destroy()?;
+    }
+
+    let window = WebviewWindowBuilder::new(
+        app,
+        EDITOR,
+        WebviewUrl::App(format!("index.html?view=editor&id={clip_id}").into()),
+    )
+    .title("Skrab · Edit")
+    .inner_size(1100.0, 760.0)
+    .min_inner_size(720.0, 520.0)
+    .resizable(true)
+    .center()
+    .build()?;
+
+    window.set_focus()?;
+    Ok(())
+}
 
 pub fn main_window(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window(MAIN)

@@ -1,6 +1,6 @@
 {
   "name": "@skrab/desktop",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,9 +27,11 @@
     "@tauri-apps/plugin-updater": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "konva": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-konva": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:",
     "zustand": "catalog:"

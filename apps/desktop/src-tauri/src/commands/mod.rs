@@ -270,6 +270,90 @@ pub fn finish_region_capture(
     })
 }
 
+// ---------------------------------------------------------------- editor
+
+/// Raw bytes of a clip's image, for the annotation editor.
+///
+/// Returned as a binary `Response` rather than a base64 string or an asset-protocol
+/// URL. Base64 inflates a full-resolution screenshot by a third across the IPC
+/// bridge, and the asset protocol depends on scope configuration that silently
+/// produced a blank editor on Windows.
+#[tauri::command]
+pub fn read_clip_image(db: State<'_, Database>, id: String) -> Result<tauri::ipc::Response> {
+    let path = db
+        .with(|conn| queries::clip_image_path(conn, &id))?
+        .ok_or_else(|| Error::Other("that clip has no image".into()))?;
+
+    let bytes = std::fs::read(&path)?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+/// Stores an annotated image as a new clip and copies it to the clipboard.
+///
+/// Saved as a *new* clip rather than overwriting: the unedited capture is often
+/// still wanted, and an editor that destroys the original is a bad surprise.
+#[tauri::command]
+pub fn save_edited_image(
+    app: AppHandle,
+    db: State<'_, Database>,
+    monitor: State<'_, MonitorState>,
+    png: Vec<u8>,
+) -> Result<String> {
+    if png.is_empty() {
+        return Err(Error::Other("the editor produced an empty image".into()));
+    }
+
+    let decoded = image::load_from_memory(&png)
+        .map_err(|e| Error::Other(format!("the edited image is not valid PNG: {e}")))?
+        .to_rgba8();
+    let (width, height) = decoded.dimensions();
+
+    let dir = crate::screenshot::overlay::screenshots_dir(&app)?;
+    std::fs::create_dir_all(&dir)?;
+    let path = dir.join(format!("{}.png", uuid::Uuid::new_v4()));
+    std::fs::write(&path, &png)?;
+
+    let path_str = path.to_string_lossy().into_owned();
+    let hash = blake3::hash(decoded.as_raw()).to_hex().to_string();
+
+    let clip = crate::clipboard::types::NewClip {
+        clip_type: crate::clipboard::types::ClipType::Image,
+        content: None,
+        preview: format!("Edited · {width}×{height}"),
+        image_path: Some(path_str.clone()),
+        thumb: crate::clipboard::capture::thumbnail(&decoded),
+        content_hash: hash.clone(),
+        size_bytes: png.len() as i64,
+        source_app: Some("Skrab".to_owned()),
+    };
+
+    db.with(|conn| queries::insert_clip(conn, &clip))?;
+
+    if let Ok(written) = crate::clipboard::write_image(&path_str) {
+        monitor.note_self_write(written);
+    }
+
+    use tauri::Emitter as _;
+    let _ = app.emit(crate::clipboard::types::CLIP_ADDED_EVENT, ());
+
+    log::info!("saved an edited image: {width}x{height}");
+    Ok(path_str)
+}
+
+/// Opens the annotation editor for one image clip.
+#[tauri::command]
+pub fn open_editor(app: AppHandle, id: String) -> Result<()> {
+    crate::window::open_editor(&app, &id)
+}
+
+#[tauri::command]
+pub fn close_editor(app: AppHandle) -> Result<()> {
+    if let Some(window) = app.get_webview_window(crate::window::EDITOR) {
+        window.destroy()?;
+    }
+    Ok(())
+}
+
 // ---------------------------------------------------------------- smart paste
 
 /// Pins or unpins the panel above other windows.

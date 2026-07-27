@@ -5,6 +5,7 @@ import {
   Copy,
   FileText,
   Image as ImageIcon,
+  Pencil,
   Pin,
   Star,
   Trash2,
@@ -30,6 +31,7 @@ type Props = {
   onToggleFavorite: () => void;
   onTogglePinned: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 };
 
 export function ClipRow({
@@ -40,6 +42,7 @@ export function ClipRow({
   onToggleFavorite,
   onTogglePinned,
   onDelete,
+  onEdit,
 }: Props) {
   const Icon = TYPE_ICON[clip.clipType] ?? Type;
 
@@ -109,6 +112,11 @@ export function ClipRow({
         <CopyAction onCopy={onCopy} />
       </div>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        {clip.clipType === 'image' && (
+          <RowAction label="Annotate this image" onClick={onEdit}>
+            <Pencil size={14} />
+          </RowAction>
+        )}
         <RowAction
           label={clip.isPinned ? 'Unpin' : 'Pin'}
           active={clip.isPinned}

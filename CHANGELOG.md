@@ -9,6 +9,19 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-27
+
+### Added
+
+- **Annotation editor.** Click the pencil on any image in the history to open it in a
+  full editor window: freehand pen, arrow, rectangle, ellipse, text, highlighter, and
+  a **redaction** tool that genuinely pixelates the region rather than covering it, so
+  the detail does not survive a re-screenshot. Seven colours, four stroke widths,
+  unlimited undo/redo (`Cmd/Ctrl+Z`, `Cmd/Ctrl+Shift+Z`), and `Cmd/Ctrl+Enter` to copy.
+- Annotated images are saved as a **new** clip and copied to the clipboard; the
+  original capture is left untouched.
+
+
 ## [0.2.1] — 2026-07-27
 
 ### Changed
@@ -145,7 +158,8 @@ and smart paste are on the roadmap.
 - Linux is not supported yet — Wayland blocks global shortcuts on most compositors.
 - Screenshot capture, the annotation editor, and smart paste are not implemented.
 
-[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/isttiiak/skrab/releases/tag/v0.3.0
 [0.2.1]: https://github.com/isttiiak/skrab/releases/tag/v0.2.1
 [0.2.0]: https://github.com/isttiiak/skrab/releases/tag/v0.2.0
 [0.1.1]: https://github.com/isttiiak/skrab/releases/tag/v0.1.1

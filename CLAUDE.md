@@ -364,7 +364,8 @@ Conventional Commits: `feat(clipboard): …`, `fix(screenshot): …`, `chore(dep
   the user's request — it is the differentiator, and the editor is the bigger chunk).
   Always-on-top widget, click-to-copy, used/unused feedback, auto-advance, opt-in
   auto-paste via `enigo`.
-- **Phase 4 — Screenshot editor.** Konva, annotation tools, undo/redo, export.
+- **Phase 4 — Screenshot editor. ✅ Done.** Konva, pen/arrow/shapes/text/highlight,
+  pixelate redaction, undo/redo, export to clipboard and history.
 - **Phase 6 — Linux, then OCR / redaction / AI object removal / optional E2EE sync.**
 
 ### Performance budget

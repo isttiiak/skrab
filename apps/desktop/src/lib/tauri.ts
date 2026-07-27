@@ -120,6 +120,26 @@ export function finishRegionCapture(region: CaptureRegion): Promise<CaptureResul
   return call<CaptureResult>('finish_region_capture', { region });
 }
 
+// ------------------------------------------------------------------- editor
+
+/** Raw PNG bytes of a clip's image. Returned as binary, not base64. */
+export function readClipImage(id: string): Promise<number[]> {
+  return call<number[]>('read_clip_image', { id });
+}
+
+/** Stores an annotated PNG as a new clip and copies it to the clipboard. */
+export function saveEditedImage(png: number[]): Promise<string> {
+  return call<string>('save_edited_image', { png });
+}
+
+export function openEditor(id: string): Promise<void> {
+  return call<void>('open_editor', { id });
+}
+
+export function closeEditor(): Promise<void> {
+  return call<void>('close_editor');
+}
+
 // ---------------------------------------------------------------- smart paste
 
 /**

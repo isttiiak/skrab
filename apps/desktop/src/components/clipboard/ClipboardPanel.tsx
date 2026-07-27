@@ -19,6 +19,7 @@ import {
   captureFullscreen,
   getAlwaysOnTop,
   hidePanel,
+  openEditor,
   setAlwaysOnTop,
   startRegionCapture,
 } from '@/lib/tauri';
@@ -290,6 +291,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
                 onToggleFavorite={() => void toggleFavorite(clip.id)}
                 onTogglePinned={() => void togglePinned(clip.id)}
                 onDelete={() => void remove(clip.id)}
+                onEdit={() => void openEditor(clip.id)}
               />
             ))}
           </ul>

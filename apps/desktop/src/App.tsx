@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
 import { ClipboardPanel } from '@/components/clipboard/ClipboardPanel';
+import { EditorView } from '@/components/editor/EditorView';
 import { CaptureOverlay } from '@/components/screenshot/CaptureOverlay';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { getSettings } from '@/lib/tauri';
@@ -42,8 +43,13 @@ export function App() {
 
   // The pinned widget is a second window loading the same bundle; the query string
   // decides which surface to render rather than pulling in a router for two views.
-  const surface = new URLSearchParams(window.location.search).get('view');
+  const params = new URLSearchParams(window.location.search);
+  const surface = params.get('view');
   if (surface === 'overlay') return <CaptureOverlay />;
+  if (surface === 'editor') {
+    const id = params.get('id');
+    return id ? <EditorView clipId={id} /> : <p className="p-4 text-sm">No image selected.</p>;
+  }
 
   return (
     <main className="h-full">
