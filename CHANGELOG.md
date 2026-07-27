@@ -9,6 +9,38 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-07-27
+
+### Changed
+
+- **The floating panel is now the main window, not a separate widget.** 0.2.0 opened a
+  second window that showed only pinned clips; the point was to have your *whole*
+  history available while filling in a form. The pin button now keeps the ordinary
+  panel above other applications, and while it is pinned, copying leaves it open and
+  Escape only clears the search.
+
+### Added
+
+- **Window capture**, so all three modes exist: region, window and whole screen. The
+  window mode lists open windows rather than asking you to click one, because Skrab's
+  own panel is in front and clicking through would leave no way to cancel.
+
+### Fixed
+
+- **Screenshots never appeared in the clipboard history.** Suppressing the clipboard
+  monitor to stop a capture echoing back as a copy also stopped it being recorded at
+  all. Captures are now inserted into the history directly.
+- **The region overlay reopened with the previous selection still drawn**, so the first
+  click looked like it cleared something. The overlay window is now destroyed on close
+  rather than hidden, so each capture starts clean.
+- **The region overlay was a blank white screen on Windows.** It loaded the frozen
+  frame through Tauri's asset protocol, which depends on the protocol being enabled
+  *and* the file falling inside a configured scope — and when either is wrong the
+  result is an empty window with no way to tell why. The frame is now inlined as a
+  data URI, and a frame that fails to arrive shows an explanation and a close button
+  instead of a blank trap.
+
+
 ## [0.2.0] — 2026-07-27
 
 ### Added
@@ -113,7 +145,8 @@ and smart paste are on the roadmap.
 - Linux is not supported yet — Wayland blocks global shortcuts on most compositors.
 - Screenshot capture, the annotation editor, and smart paste are not implemented.
 
-[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/isttiiak/skrab/releases/tag/v0.2.1
 [0.2.0]: https://github.com/isttiiak/skrab/releases/tag/v0.2.0
 [0.1.1]: https://github.com/isttiiak/skrab/releases/tag/v0.1.1
 [0.1.0]: https://github.com/isttiiak/skrab/releases/tag/v0.1.0

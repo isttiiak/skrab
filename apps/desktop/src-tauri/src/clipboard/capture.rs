@@ -125,7 +125,7 @@ fn image_clip(
 
 /// Downscaled JPEG for the list row. `None` if encoding fails — a missing thumbnail
 /// degrades to a placeholder, which is not worth failing the whole capture over.
-fn thumbnail(source: &RgbaImage) -> Option<Vec<u8>> {
+pub fn thumbnail(source: &RgbaImage) -> Option<Vec<u8>> {
     let (w, h) = source.dimensions();
     if w == 0 || h == 0 {
         return None;

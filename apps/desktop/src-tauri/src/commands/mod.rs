@@ -213,6 +213,26 @@ pub fn start_region_capture(app: AppHandle) {
     crate::screenshot::overlay::open(&app);
 }
 
+/// Captures one window by id and copies it, like the other two capture modes.
+#[tauri::command]
+pub fn capture_window_by_id(app: AppHandle, window_id: u32) -> Result<CaptureResult> {
+    // Our own panel is usually in front of whatever the user picked.
+    crate::window::hide(&app);
+    std::thread::sleep(std::time::Duration::from_millis(150));
+
+    let dir = crate::screenshot::overlay::screenshots_dir(&app)?;
+    let capture = crate::screenshot::capture_window(&dir, window_id)?;
+    let path = capture.path.to_string_lossy().into_owned();
+    crate::screenshot::overlay::record_and_copy(&app, &capture);
+
+    Ok(CaptureResult {
+        id: String::new(),
+        path,
+        width: capture.width,
+        height: capture.height,
+    })
+}
+
 #[tauri::command]
 pub fn capture_fullscreen(app: AppHandle) {
     crate::screenshot::overlay::capture_fullscreen_now(&app);
@@ -252,23 +272,21 @@ pub fn finish_region_capture(
 
 // ---------------------------------------------------------------- smart paste
 
+/// Pins or unpins the panel above other windows.
 #[tauri::command]
-pub fn toggle_pins_widget(app: AppHandle) {
-    crate::window::toggle_pins(&app);
+pub fn set_always_on_top(app: AppHandle, pinned: bool) -> Result<()> {
+    crate::window::set_always_on_top(&app, pinned)
 }
 
 #[tauri::command]
-pub fn close_pins_widget(app: AppHandle) -> Result<()> {
-    if let Some(window) = app.get_webview_window(crate::window::PINS) {
-        window.hide()?;
-    }
-    Ok(())
+pub fn get_always_on_top(app: AppHandle) -> bool {
+    crate::window::is_always_on_top(&app)
 }
 
-/// Copies a pinned clip and, if the user has opted in, pastes it into the app behind.
+/// Copies a clip and, if the user has opted in, pastes it into the app behind.
 ///
-/// Returns whether a keystroke was actually sent, so the widget can tell the user
-/// "copied" versus "pasted" honestly instead of claiming something it did not do.
+/// Returns whether a keystroke was actually sent, so the UI can say "copied" versus
+/// "pasted" honestly instead of claiming something it did not do.
 #[tauri::command]
 pub async fn paste_clip(
     app: AppHandle,
@@ -283,18 +301,18 @@ pub async fn paste_clip(
         return Ok(false);
     }
 
-    // The keystroke has to land in the app the user was working in, so the widget
+    // The keystroke has to land in the app the user was working in, so the panel
     // must lose focus first. Hiding and waiting is the only portable way to get
     // there — without the pause the paste races the window manager.
-    if let Some(window) = app.get_webview_window(crate::window::PINS) {
-        window.hide()?;
-    }
+    let pinned = crate::window::is_always_on_top(&app);
+    crate::window::hide(&app);
     tokio::time::sleep(crate::input::FOCUS_SETTLE).await;
 
     crate::input::send_paste()?;
 
-    if let Some(window) = app.get_webview_window(crate::window::PINS) {
-        window.show()?;
+    // A pinned panel is meant to stay put, so put it back.
+    if pinned {
+        crate::window::show(&app);
     }
     Ok(true)
 }

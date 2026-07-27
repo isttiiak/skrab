@@ -1,5 +1,4 @@
 import type { OverlayFrame } from '@skrab/ipc-types';
-import { convertFileSrc } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cancelRegionCapture, finishRegionCapture, getOverlayFrame } from '@/lib/tauri';
 
@@ -79,8 +78,25 @@ export function CaptureOverlay() {
     }
   }, [frame, rect, cancel]);
 
+  // Never render a blank window: if the frame never arrived the user would be
+  // staring at a full-screen white rectangle with no way out.
   if (!frame) {
-    return <div className="h-full w-full bg-black/40" />;
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black/85 text-white">
+        <p className="text-sm font-medium">Could not prepare the screen capture</p>
+        <p className="max-w-md text-center text-xs opacity-70">
+          On macOS, grant Screen Recording permission in System Settings → Privacy &amp; Security,
+          then quit and reopen Skrab.
+        </p>
+        <button
+          type="button"
+          onClick={cancel}
+          className="mt-1 rounded-md bg-white/15 px-3 py-1.5 text-xs hover:bg-white/25"
+        >
+          Close (Esc)
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -100,7 +116,7 @@ export function CaptureOverlay() {
       onMouseUp={() => void finish()}
     >
       <img
-        src={convertFileSrc(frame.path)}
+        src={frame.preview}
         alt=""
         draggable={false}
         className="pointer-events-none absolute inset-0 h-full w-full object-fill"
@@ -121,7 +137,7 @@ export function CaptureOverlay() {
             }}
           >
             <img
-              src={convertFileSrc(frame.path)}
+              src={frame.preview}
               alt=""
               draggable={false}
               className="absolute h-full w-full object-fill"

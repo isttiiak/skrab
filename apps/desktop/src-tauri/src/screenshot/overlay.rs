@@ -22,7 +22,14 @@ pub const OVERLAY: &str = "capture-overlay";
 #[ts(export, export_to = "OverlayFrame.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct OverlayFrame {
-    /// Absolute path to the frozen PNG, served through the asset protocol.
+    /// The frozen screen as a `data:` URI.
+    ///
+    /// Inlined rather than served through Tauri's asset protocol: that path depends
+    /// on the protocol being enabled *and* the file falling inside a configured
+    /// scope, and when either is wrong the overlay renders a blank window with no
+    /// way to tell why. A data URI always renders or fails visibly.
+    pub preview: String,
+    /// Absolute path to the full-resolution frame, used for the actual crop.
     pub path: String,
     pub width: u32,
     pub height: u32,
@@ -73,19 +80,10 @@ pub fn open(app: &AppHandle) {
 fn try_open(app: &AppHandle) -> Result<()> {
     // Get our own windows out of the shot before freezing the screen.
     crate::window::hide(app);
-    if let Some(pins) = app.get_webview_window(crate::window::PINS) {
-        let _ = pins.hide();
-    }
     std::thread::sleep(std::time::Duration::from_millis(120));
 
     let (frame, monitor) = freeze(app)?;
     app.state::<OverlayState>().set(Some(frame));
-
-    if let Some(existing) = app.get_webview_window(OVERLAY) {
-        existing.show()?;
-        existing.set_focus()?;
-        return Ok(());
-    }
 
     let window = WebviewWindowBuilder::new(
         app,
@@ -126,6 +124,11 @@ fn freeze(app: &AppHandle) -> Result<(OverlayFrame, (i32, i32, f64, f64))> {
         .save(&path)
         .map_err(|e| Error::Other(format!("could not save the frame: {e}")))?;
 
+    // A JPEG preview keeps the IPC payload to a few hundred KB; the crop still runs
+    // against the full-resolution PNG on disk.
+    let preview = encode_preview(&image)
+        .ok_or_else(|| Error::Other("could not prepare the capture preview".into()))?;
+
     let scale = monitor.scale_factor().unwrap_or(1.0);
     let (origin_x, origin_y) = (monitor.x().unwrap_or(0), monitor.y().unwrap_or(0));
 
@@ -135,6 +138,7 @@ fn freeze(app: &AppHandle) -> Result<(OverlayFrame, (i32, i32, f64, f64))> {
 
     Ok((
         OverlayFrame {
+            preview,
             path: path.to_string_lossy().into_owned(),
             width: image.width(),
             height: image.height(),
@@ -146,13 +150,40 @@ fn freeze(app: &AppHandle) -> Result<(OverlayFrame, (i32, i32, f64, f64))> {
     ))
 }
 
+/// Closes the overlay by destroying the window.
+///
+/// Destroyed rather than hidden so the next capture starts from a clean slate — a
+/// hidden window keeps its React state, which meant the previous selection was still
+/// drawn when the overlay reopened and the first click appeared to "clear" it.
 pub fn close(app: &AppHandle) {
     app.state::<OverlayState>().set(None);
     if let Some(window) = app.get_webview_window(OVERLAY)
-        && let Err(e) = window.hide()
+        && let Err(e) = window.destroy()
     {
-        log::error!("could not hide the capture overlay: {e}");
+        log::error!("could not close the capture overlay: {e}");
     }
+}
+
+/// Encodes the frame as a JPEG data URI for display in the overlay.
+fn encode_preview(image: &image::RgbaImage) -> Option<String> {
+    use base64::Engine as _;
+    use image::ImageEncoder as _;
+
+    let rgb = image::DynamicImage::ImageRgba8(image.clone()).to_rgb8();
+    let mut bytes = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut bytes, 82)
+        .write_image(
+            rgb.as_raw(),
+            rgb.width(),
+            rgb.height(),
+            image::ExtendedColorType::Rgb8,
+        )
+        .ok()?;
+
+    Some(format!(
+        "data:image/jpeg;base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(&bytes)
+    ))
 }
 
 /// Crops the frozen frame to `region` (in physical pixels of that frame) and stores it.
@@ -219,8 +250,12 @@ pub fn record_and_copy(app: &AppHandle, capture: &super::capture::Capture) {
 
     match crate::clipboard::write_image(&path) {
         Ok(hash) => {
+            // Suppressing the monitor stops the screenshot echoing back as a copy,
+            // but it also meant it never reached the history at all. Insert it
+            // directly so captures show up in the list like any other image clip.
             app.state::<crate::clipboard::MonitorState>()
-                .note_self_write(hash);
+                .note_self_write(hash.clone());
+            add_to_history(app, capture, &path, hash);
             crate::notify(
                 app,
                 "Screenshot copied",
@@ -228,5 +263,39 @@ pub fn record_and_copy(app: &AppHandle, capture: &super::capture::Capture) {
             );
         }
         Err(e) => log::error!("could not copy the screenshot: {e}"),
+    }
+}
+
+/// Records a capture in the clipboard history so it appears in the panel.
+///
+/// The `screenshots` table keeps capture metadata, but the list the user actually
+/// looks at is `clip_items` — a screenshot that only landed in the former was
+/// invisible everywhere in the UI.
+fn add_to_history(app: &AppHandle, capture: &super::capture::Capture, path: &str, hash: String) {
+    let thumb = image::open(path)
+        .ok()
+        .map(|img| img.to_rgba8())
+        .and_then(|img| crate::clipboard::capture::thumbnail(&img));
+
+    let size_bytes = std::fs::metadata(path).map(|m| m.len() as i64).unwrap_or(0);
+
+    let clip = crate::clipboard::types::NewClip {
+        clip_type: crate::clipboard::types::ClipType::Image,
+        content: None,
+        preview: format!("Screenshot · {}×{}", capture.width, capture.height),
+        image_path: Some(path.to_owned()),
+        thumb,
+        content_hash: hash,
+        size_bytes,
+        source_app: Some("Skrab".to_owned()),
+    };
+
+    let db = app.state::<Database>();
+    match db.with(|conn| queries::insert_clip(conn, &clip)) {
+        Ok(_) => {
+            use tauri::Emitter as _;
+            let _ = app.emit(crate::clipboard::types::CLIP_ADDED_EVENT, ());
+        }
+        Err(e) => log::error!("could not add the screenshot to history: {e}"),
     }
 }

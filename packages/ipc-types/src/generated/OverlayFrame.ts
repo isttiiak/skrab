@@ -11,7 +11,16 @@
  */
 export type OverlayFrame = { 
 /**
- * Absolute path to the frozen PNG, served through the asset protocol.
+ * The frozen screen as a `data:` URI.
+ *
+ * Inlined rather than served through Tauri's asset protocol: that path depends
+ * on the protocol being enabled *and* the file falling inside a configured
+ * scope, and when either is wrong the overlay renders a blank window with no
+ * way to tell why. A data URI always renders or fails visibly.
+ */
+preview: string, 
+/**
+ * Absolute path to the full-resolution frame, used for the actual crop.
  */
 path: string, width: number, height: number, 
 /**

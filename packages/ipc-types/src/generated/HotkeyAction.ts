@@ -3,4 +3,4 @@
 /**
  * Everything a hotkey can trigger.
  */
-export type HotkeyAction = "togglePanel" | "togglePins" | "captureRegion" | "captureFullscreen";
+export type HotkeyAction = "togglePanel" | "toggleAlwaysOnTop" | "captureRegion" | "captureFullscreen";

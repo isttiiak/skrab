@@ -1,18 +1,27 @@
 import { CLIP_ADDED_EVENT } from '@skrab/ipc-types';
 import { listen } from '@tauri-apps/api/event';
 import {
+  AppWindow,
   ClipboardList,
   Crop,
   Monitor,
   Pin,
+  PinOff,
   Search,
   Settings as SettingsIcon,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ClipRow } from '@/components/clipboard/ClipRow';
-import { captureFullscreen, hidePanel, startRegionCapture, togglePinsWidget } from '@/lib/tauri';
+import { WindowPicker } from '@/components/screenshot/WindowPicker';
+import {
+  captureFullscreen,
+  getAlwaysOnTop,
+  hidePanel,
+  setAlwaysOnTop,
+  startRegionCapture,
+} from '@/lib/tauri';
 import { cn } from '@/lib/utils';
 import { type TypeFilter, useClipboardStore } from '@/stores/clipboardStore';
 
@@ -42,6 +51,32 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
 
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const [pinnedOnTop, setPinnedOnTop] = useState(false);
+  const [pickingWindow, setPickingWindow] = useState(false);
+
+  useEffect(() => {
+    void getAlwaysOnTop()
+      .then(setPinnedOnTop)
+      .catch(() => undefined);
+  }, []);
+
+  /**
+   * Pins the panel above other windows.
+   *
+   * While pinned, copying deliberately leaves the panel open — the whole point is to
+   * sit beside a form and click several values in a row without re-summoning it.
+   */
+  const toggleOnTop = useCallback(async () => {
+    const next = !pinnedOnTop;
+    setPinnedOnTop(next);
+    try {
+      await setAlwaysOnTop(next);
+      toast.success(next ? 'Panel stays on top' : 'Panel no longer on top');
+    } catch {
+      setPinnedOnTop(!next);
+      toast.error('Could not change the window mode');
+    }
+  }, [pinnedOnTop]);
 
   useEffect(() => {
     void refresh();
@@ -92,8 +127,8 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
         return;
       }
 
-      if (!close) {
-        toast.success('Copied');
+      if (!close || pinnedOnTop) {
+        toast.success('Copied — paste it anywhere');
         return;
       }
 
@@ -105,7 +140,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
         toast.success('Copied');
       }
     },
-    [copy],
+    [copy, pinnedOnTop],
   );
 
   const copySelected = useCallback(() => {
@@ -133,7 +168,8 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
           event.preventDefault();
           if (search) {
             setSearch('');
-          } else {
+          } else if (!pinnedOnTop) {
+            // A pinned panel is meant to stay put; Escape only clears the search.
             void hidePanel();
           }
           break;
@@ -141,7 +177,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
           break;
       }
     },
-    [moveSelection, copySelected, search, setSearch],
+    [moveSelection, copySelected, search, setSearch, pinnedOnTop],
   );
 
   // Window-level rather than on a wrapper element: focus can legitimately sit on the
@@ -153,7 +189,8 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
   }, [onKeyDown]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      {pickingWindow && <WindowPicker onClose={() => setPickingWindow(false)} />}
       <header className="border-border shrink-0 border-b px-3 pt-3 pb-2">
         <div className="mb-2.5 flex items-center gap-2">
           <span className="gradient-brand flex h-7 w-7 items-center justify-center rounded-lg text-white shadow-sm">
@@ -163,15 +200,19 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
 
           <div className="ml-auto flex items-center gap-0.5">
             <ToolButton
-              label="Pinned items — click any pin to copy it"
-              onClick={() => void togglePinsWidget()}
+              label={pinnedOnTop ? 'Unpin from top' : 'Keep panel on top of other apps'}
+              active={pinnedOnTop}
+              onClick={() => void toggleOnTop()}
             >
-              <Pin size={15} />
+              {pinnedOnTop ? <Pin size={15} /> : <PinOff size={15} />}
             </ToolButton>
             <ToolButton label="Capture a region" onClick={() => void startRegionCapture()}>
               <Crop size={15} />
             </ToolButton>
-            <ToolButton label="Capture the screen" onClick={() => void captureFullscreen()}>
+            <ToolButton label="Capture a window" onClick={() => setPickingWindow(true)}>
+              <AppWindow size={15} />
+            </ToolButton>
+            <ToolButton label="Capture the whole screen" onClick={() => void captureFullscreen()}>
               <Monitor size={15} />
             </ToolButton>
           </div>
@@ -258,7 +299,7 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
       <footer className="border-border text-muted-foreground shrink-0 border-t px-3 py-1.5 text-[10px]">
         <span className="flex items-center gap-2.5">
           <Hint keys="↑↓" label="navigate" />
-          <Hint keys="↵" label="copy & close" />
+          <Hint keys="↵" label={pinnedOnTop ? 'copy' : 'copy & close'} />
           <Hint keys="esc" label="close" />
           <span className="ml-auto">{clips.length} shown</span>
         </span>
@@ -269,10 +310,12 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
 
 function ToolButton({
   label,
+  active = false,
   onClick,
   children,
 }: {
   label: string;
+  active?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -281,8 +324,14 @@ function ToolButton({
       type="button"
       title={label}
       aria-label={label}
+      aria-pressed={active}
       onClick={onClick}
-      className="text-muted-foreground hover:bg-primary-soft hover:text-primary focus-visible:ring-ring rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className={cn(
+        'focus-visible:ring-ring rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none',
+        active
+          ? 'bg-primary-soft text-primary'
+          : 'text-muted-foreground hover:bg-primary-soft hover:text-primary',
+      )}
     >
       {children}
     </button>

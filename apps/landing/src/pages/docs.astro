@@ -7,7 +7,7 @@ const TOC = [
   { id: 'install-windows', label: 'Install on Windows' },
   { id: 'windows-smartscreen', label: '— SmartScreen warning' },
   { id: 'first-run', label: 'First run' },
-  { id: 'pinned', label: 'Pinned items (smart paste)' },
+  { id: 'pinned', label: 'Keep the panel on top' },
   { id: 'screenshots', label: 'Screenshots' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
   { id: 'privacy', label: 'Privacy & passwords' },
@@ -147,68 +147,75 @@ const TOC = [
       </section>
 
       <section id="pinned">
-        <h2>Pinned items — the floating widget</h2>
+        <h2>Keep the panel on top</h2>
         <p>
-          This is the feature Skrab exists for. Pin the values you need repeatedly, park
-          the widget on top of whatever you are working in, and click each one straight
-          onto your clipboard.
+          This is what makes Skrab useful while filling in a form. Pin the panel above
+          everything else and it stays put, showing your whole clipboard history, while
+          you work in another window.
         </p>
         <ol>
           <li>
-            Open the panel and hover a clip. Click the <b>pin</b> icon on the row. Pinned
-            clips rise to the top of the list and are never deleted by retention.
+            Open Skrab (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>) and click
+            the <b>pin</b> button in the toolbar — or press
+            <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>.
           </li>
           <li>
-            Open the widget: the <b>pin button in the panel toolbar</b>, the tray menu
-            (<b>Pinned items</b>), or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>.
+            <b>Move and resize the window</b> to sit wherever suits you. It now floats
+            above other applications.
           </li>
           <li>
-            <b>Drag it by its header</b> to wherever you want it. It floats above every
-            other application and stays there.
+            Click any clip's <b>copy</b> button. The panel <b>stays open</b> — no
+            re-summoning between fields.
           </li>
-          <li>
-            Click any row. That value goes onto your clipboard — then paste it wherever
-            you like with <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>V</kbd>.
-          </li>
+          <li>Click into your form and paste with <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
         </ol>
-        <p>
-          Clicked items get a tick and a strike-through so you can see how far through a
-          form you are, and the highlight moves to the next one automatically. <b>Reset</b>
-          in the header clears the marks when you start the next form.
+        <p class="muted">
+          Click the pin again to release it; the panel goes back to hiding itself after
+          a copy. While pinned, <kbd>Esc</kbd> only clears the search rather than closing
+          the window.
         </p>
         <div class="callout teal">
           <b>Want it to paste for you?</b>
           <p>
             Turn on <b>Settings → Smart paste → Paste automatically</b> and Skrab sends
             <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>V</kbd> to whatever is behind it after each
-            click. On macOS this needs Accessibility permission (System Settings →
+            copy. On macOS this needs Accessibility permission (System Settings →
             Privacy &amp; Security → Accessibility). Left off, Skrab only ever copies —
-            which is the safer default and needs no permission at all.
+            the safer default, and it needs no permission at all.
           </p>
         </div>
+        <p class="muted small">
+          Pinning an individual <i>clip</i> (the pin icon on a row) is a different thing:
+          it keeps that clip at the top of the list and exempts it from retention.
+        </p>
       </section>
 
       <section id="screenshots">
         <h2>Screenshots</h2>
+        <p>Three modes, all on the panel toolbar:</p>
         <ul class="checks">
           <li>
-            <b>Region.</b> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>, or the
-            crop button in the toolbar. The screen freezes; drag a box and release.
-            <kbd>Esc</kbd> cancels.
+            <b>Region</b> — <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd> or the
+            crop icon. The screen freezes; drag a box and release. <kbd>Esc</kbd> cancels.
           </li>
           <li>
-            <b>Whole screen.</b> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, or
-            the monitor button.
+            <b>Window</b> — the window icon. Pick from a list of open windows. A list
+            rather than click-the-window, because Skrab's own panel is in front and you
+            would have nothing left to cancel with.
+          </li>
+          <li>
+            <b>Whole screen</b> — <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> or
+            the monitor icon.
           </li>
         </ul>
         <p>
-          Either way the image lands on your clipboard immediately and is saved to your
-          data folder, so you can paste it straight into a chat or a document.
+          Every capture lands on your clipboard <i>and</i> in your clipboard history, so
+          you can paste it straight away or come back to it later.
         </p>
         <div class="callout amber">
           <b>macOS needs Screen Recording permission.</b>
           <p>
-            The first capture will fail until you grant it in System Settings → Privacy
+            The first capture fails until you grant it in System Settings → Privacy
             &amp; Security → Screen Recording — and macOS only applies it on a fresh
             launch, so <b>quit and reopen Skrab</b> afterwards.
           </p>
@@ -245,7 +252,7 @@ const TOC = [
                 <td colspan="2"><kbd>Esc</kbd></td>
               </tr>
               <tr>
-                <td>Pinned items widget</td>
+                <td>Keep panel on top</td>
                 <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td>
                 <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td>
               </tr>

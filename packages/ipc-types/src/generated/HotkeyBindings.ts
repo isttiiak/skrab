@@ -8,4 +8,4 @@
  * shown back to the user exactly as typed. `CmdOrCtrl` resolves to Command on macOS
  * and Control elsewhere, which is what users expect from a cross-platform default.
  */
-export type HotkeyBindings = { togglePanel: string, togglePins: string, captureRegion: string, captureFullscreen: string, };
+export type HotkeyBindings = { togglePanel: string, toggleAlwaysOnTop: string, captureRegion: string, captureFullscreen: string, };

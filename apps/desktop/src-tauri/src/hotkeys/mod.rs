@@ -15,7 +15,7 @@ use crate::window;
 #[serde(rename_all = "camelCase")]
 pub enum HotkeyAction {
     TogglePanel,
-    TogglePins,
+    ToggleAlwaysOnTop,
     CaptureRegion,
     CaptureFullscreen,
 }
@@ -23,7 +23,7 @@ pub enum HotkeyAction {
 impl HotkeyAction {
     pub const ALL: [HotkeyAction; 4] = [
         HotkeyAction::TogglePanel,
-        HotkeyAction::TogglePins,
+        HotkeyAction::ToggleAlwaysOnTop,
         HotkeyAction::CaptureRegion,
         HotkeyAction::CaptureFullscreen,
     ];
@@ -32,7 +32,7 @@ impl HotkeyAction {
     pub fn label(self) -> &'static str {
         match self {
             HotkeyAction::TogglePanel => "Clipboard history",
-            HotkeyAction::TogglePins => "Pinned items widget",
+            HotkeyAction::ToggleAlwaysOnTop => "Keep panel on top",
             HotkeyAction::CaptureRegion => "Capture a region",
             HotkeyAction::CaptureFullscreen => "Capture the screen",
         }
@@ -50,7 +50,7 @@ impl HotkeyAction {
 #[serde(rename_all = "camelCase", default)]
 pub struct HotkeyBindings {
     pub toggle_panel: String,
-    pub toggle_pins: String,
+    pub toggle_always_on_top: String,
     pub capture_region: String,
     pub capture_fullscreen: String,
 }
@@ -59,7 +59,7 @@ impl Default for HotkeyBindings {
     fn default() -> Self {
         Self {
             toggle_panel: "CmdOrCtrl+Shift+V".to_owned(),
-            toggle_pins: "CmdOrCtrl+Shift+P".to_owned(),
+            toggle_always_on_top: "CmdOrCtrl+Shift+P".to_owned(),
             capture_region: "CmdOrCtrl+Shift+A".to_owned(),
             capture_fullscreen: "CmdOrCtrl+Shift+S".to_owned(),
         }
@@ -70,7 +70,7 @@ impl HotkeyBindings {
     pub fn get(&self, action: HotkeyAction) -> &str {
         match action {
             HotkeyAction::TogglePanel => &self.toggle_panel,
-            HotkeyAction::TogglePins => &self.toggle_pins,
+            HotkeyAction::ToggleAlwaysOnTop => &self.toggle_always_on_top,
             HotkeyAction::CaptureRegion => &self.capture_region,
             HotkeyAction::CaptureFullscreen => &self.capture_fullscreen,
         }
@@ -155,7 +155,12 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 fn dispatch(app: &AppHandle, action: HotkeyAction) {
     match action {
         HotkeyAction::TogglePanel => window::toggle(app),
-        HotkeyAction::TogglePins => window::toggle_pins(app),
+        HotkeyAction::ToggleAlwaysOnTop => {
+            let pinned = window::is_always_on_top(app);
+            if let Err(e) = window::set_always_on_top(app, !pinned) {
+                log::error!("could not toggle always-on-top: {e}");
+            }
+        }
         HotkeyAction::CaptureRegion => crate::screenshot::overlay::open(app),
         HotkeyAction::CaptureFullscreen => crate::screenshot::overlay::capture_fullscreen_now(app),
     }
@@ -242,13 +247,13 @@ mod tests {
     fn a_duplicate_accelerator_is_reported_once() {
         let bindings = HotkeyBindings {
             toggle_panel: "CmdOrCtrl+Shift+V".to_owned(),
-            toggle_pins: "CmdOrCtrl+Shift+V".to_owned(),
+            toggle_always_on_top: "CmdOrCtrl+Shift+V".to_owned(),
             ..Default::default()
         };
         // The first use wins; only the later one is flagged.
         assert_eq!(
             bindings.internal_conflicts(),
-            vec![HotkeyAction::TogglePins]
+            vec![HotkeyAction::ToggleAlwaysOnTop]
         );
     }
 
@@ -256,12 +261,12 @@ mod tests {
     fn conflict_detection_ignores_case() {
         let bindings = HotkeyBindings {
             toggle_panel: "CmdOrCtrl+Shift+V".to_owned(),
-            toggle_pins: "cmdorctrl+shift+v".to_owned(),
+            toggle_always_on_top: "cmdorctrl+shift+v".to_owned(),
             ..Default::default()
         };
         assert_eq!(
             bindings.internal_conflicts(),
-            vec![HotkeyAction::TogglePins]
+            vec![HotkeyAction::ToggleAlwaysOnTop]
         );
     }
 
@@ -270,7 +275,7 @@ mod tests {
         // Clearing two shortcuts must not report them as clashing with each other.
         let bindings = HotkeyBindings {
             toggle_panel: String::new(),
-            toggle_pins: "  ".to_owned(),
+            toggle_always_on_top: "  ".to_owned(),
             ..Default::default()
         };
         assert!(bindings.internal_conflicts().is_empty());
@@ -294,6 +299,6 @@ mod tests {
         let bindings: HotkeyBindings =
             serde_json::from_str(r#"{"togglePanel":"CmdOrCtrl+K"}"#).unwrap();
         assert_eq!(bindings.toggle_panel, "CmdOrCtrl+K");
-        assert_eq!(bindings.toggle_pins, "CmdOrCtrl+Shift+P");
+        assert_eq!(bindings.toggle_always_on_top, "CmdOrCtrl+Shift+P");
     }
 }

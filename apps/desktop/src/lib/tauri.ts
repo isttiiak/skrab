@@ -9,6 +9,7 @@ import type {
   HotkeyBindings,
   HotkeyStatus,
   OverlayFrame,
+  WindowInfo,
 } from '@skrab/ipc-types';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -129,12 +130,20 @@ export function pasteClip(id: string): Promise<boolean> {
   return call<boolean>('paste_clip', { id });
 }
 
-export function togglePinsWidget(): Promise<void> {
-  return call<void>('toggle_pins_widget');
+export function setAlwaysOnTop(pinned: boolean): Promise<void> {
+  return call<void>('set_always_on_top', { pinned });
 }
 
-export function closePinsWidget(): Promise<void> {
-  return call<void>('close_pins_widget');
+export function getAlwaysOnTop(): Promise<boolean> {
+  return call<boolean>('get_always_on_top');
+}
+
+export function listCapturableWindows(): Promise<WindowInfo[]> {
+  return call<WindowInfo[]>('list_capturable_windows');
+}
+
+export function captureWindow(windowId: number): Promise<CaptureResult> {
+  return call<CaptureResult>('capture_window_by_id', { windowId });
 }
 
 // ------------------------------------------------------------------- window
