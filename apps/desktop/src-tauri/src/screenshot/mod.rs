@@ -6,6 +6,7 @@
 //! deprecating the older capture APIs.
 
 pub mod capture;
+pub mod overlay;
 pub mod types;
 
 pub use capture::{capture_monitor, capture_region, capture_window};

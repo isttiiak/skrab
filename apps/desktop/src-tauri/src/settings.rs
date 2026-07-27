@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::error::Result;
+use crate::hotkeys::HotkeyBindings;
 
 /// In-memory settings, shared with the monitor thread.
 ///
@@ -53,6 +54,8 @@ pub struct AppSettings {
     pub skip_secret_patterns: bool,
     /// `system` | `light` | `dark`
     pub theme: String,
+    /// User-assigned global shortcuts.
+    pub hotkeys: HotkeyBindings,
     pub launch_at_login: bool,
     /// Send Cmd/Ctrl+V after copying from the pinned widget.
     /// Off by default: on macOS this needs Accessibility permission.
@@ -68,7 +71,9 @@ impl Default for AppSettings {
             retention_days: 30,
             blocked_apps: Vec::new(),
             skip_secret_patterns: true,
-            theme: "system".to_owned(),
+            // Dark is the design the app was tuned for; `system` remains one click away.
+            theme: "dark".to_owned(),
+            hotkeys: HotkeyBindings::default(),
             launch_at_login: false,
             auto_paste: false,
         }

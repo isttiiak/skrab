@@ -1,8 +1,17 @@
-import type { AppInfo, AppSettings } from '@skrab/ipc-types';
+import type { AppInfo, AppSettings, HotkeyBindings, HotkeyStatus } from '@skrab/ipc-types';
 import { ArrowLeft, FolderOpen, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getAppInfo, getSettings, openDataDir, saveSettings } from '@/lib/tauri';
+import { HotkeyRecorder } from '@/components/settings/HotkeyRecorder';
+import {
+  defaultHotkeys,
+  getAppInfo,
+  getSettings,
+  hotkeyStatus,
+  openDataDir,
+  saveSettings,
+  setHotkeys,
+} from '@/lib/tauri';
 import { cn } from '@/lib/utils';
 import { useClipboardStore } from '@/stores/clipboardStore';
 
@@ -16,12 +25,16 @@ const RETENTION_CHOICES = [
 export function SettingsPanel({ onBack }: { onBack: () => void }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [info, setInfo] = useState<AppInfo | null>(null);
+  const [hotkeys, setHotkeyStatuses] = useState<HotkeyStatus[]>([]);
   const clearAll = useClipboardStore((s) => s.clearAll);
 
   useEffect(() => {
     void getSettings()
       .then(setSettings)
       .catch(() => toast.error('Could not load settings'));
+    void hotkeyStatus()
+      .then(setHotkeyStatuses)
+      .catch(() => undefined);
     void getAppInfo()
       .then(setInfo)
       .catch(() => undefined);
@@ -43,6 +56,31 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
     },
     [settings],
   );
+
+  /** Applies one shortcut change and adopts the backend's verdict on all of them. */
+  const rebind = useCallback(
+    async (action: string, accelerator: string) => {
+      const next: Record<string, string> = {};
+      for (const entry of hotkeys) next[entry.action] = entry.accelerator;
+      next[action] = accelerator;
+
+      try {
+        setHotkeyStatuses(await setHotkeys(next as unknown as HotkeyBindings));
+      } catch {
+        toast.error('Could not update that shortcut');
+      }
+    },
+    [hotkeys],
+  );
+
+  const resetHotkeys = useCallback(async () => {
+    try {
+      setHotkeyStatuses(await setHotkeys(await defaultHotkeys()));
+      toast.success('Shortcuts restored');
+    } catch {
+      toast.error('Could not restore the shortcuts');
+    }
+  }, []);
 
   if (!settings) {
     return <p className="text-muted-foreground p-4 text-sm">Loading…</p>;
@@ -143,6 +181,30 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
               className="border-border bg-surface w-24 rounded-md border px-2 py-1 text-xs"
             />
           </Field>
+        </Section>
+
+        <Section title="Shortcuts">
+          <p className="text-muted-foreground text-[10px]">
+            Click a shortcut, then press the combination you want. Skrab tells you if another app
+            already owns it.
+          </p>
+          {hotkeys.map((entry) => (
+            <HotkeyRecorder
+              key={entry.action}
+              label={entry.label}
+              accelerator={entry.accelerator}
+              registered={entry.registered}
+              problem={entry.problem}
+              onChange={(accelerator) => void rebind(entry.action, accelerator)}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => void resetHotkeys()}
+            className="border-border hover:bg-surface-muted w-full rounded-lg border px-2.5 py-1.5 text-[11px] transition-colors"
+          >
+            Restore default shortcuts
+          </button>
         </Section>
 
         <Section title="Smart paste">

@@ -14,6 +14,17 @@ use tauri::{Manager, WindowEvent};
 
 pub use error::{Error, Result};
 
+/// Best-effort desktop notification.
+///
+/// Screenshot hotkeys fire with no window on screen, so a toast in the panel would
+/// be invisible — the OS notification is the only feedback the user can actually see.
+pub fn notify(app: &tauri::AppHandle, title: &str, body: &str) {
+    use tauri_plugin_notification::NotificationExt;
+    if let Err(e) = app.notification().builder().title(title).body(body).show() {
+        log::warn!("could not show a notification: {e}");
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
@@ -52,7 +63,9 @@ pub fn run() {
 
             let database = db::Database::open(&app_data_dir)?;
             let loaded = database.with(settings::load)?;
+            let hotkey_bindings = loaded.hotkeys.clone();
 
+            app.manage(screenshot::overlay::OverlayState::default());
             app.manage(clipboard::MonitorState::new(loaded.monitoring_enabled));
             app.manage(settings::SettingsState::new(loaded));
             app.manage(database);
@@ -69,7 +82,8 @@ pub fn run() {
                     tauri_plugin_autostart::MacosLauncher::LaunchAgent,
                     None,
                 ))?;
-                hotkeys::setup(app)?;
+                hotkeys::setup(app.handle())?;
+                hotkeys::apply(app.handle(), &hotkey_bindings);
             }
 
             clipboard::spawn(app.handle().clone());
@@ -101,6 +115,14 @@ pub fn run() {
             commands::list_monitors,
             commands::list_capturable_windows,
             commands::capture_screen,
+            commands::set_hotkeys,
+            commands::hotkey_status,
+            commands::default_hotkeys,
+            commands::start_region_capture,
+            commands::capture_fullscreen,
+            commands::get_overlay_frame,
+            commands::cancel_region_capture,
+            commands::finish_region_capture,
             commands::toggle_pins_widget,
             commands::close_pins_widget,
             commands::paste_clip,

@@ -9,6 +9,38 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-27
+
+### Added
+
+- **Configurable shortcuts.** Settings → Shortcuts: click one, press the combination
+  you want. Skrab registers it immediately and reports back — it names the problem
+  when another application already owns the combination, or when two Skrab actions
+  would clash, instead of failing silently the way global shortcuts normally do.
+  Shortcuts can be cleared individually or reset to defaults.
+- **Screenshot capture.** Region (`Cmd/Ctrl+Shift+A`) and full screen
+  (`Cmd/Ctrl+Shift+S`), also on the panel toolbar. Region capture freezes the screen
+  first and lets you drag on the still, so the overlay can never appear in its own
+  capture. Captures land on the clipboard immediately.
+- **Toolbar buttons** in the panel for the pinned widget and both capture modes — the
+  features existed in 0.1.1 but nothing pointed at them.
+
+### Fixed
+
+- **macOS "Skrab.app is damaged and can't be opened."** The released bundle carried
+  only the linker's implicit signature with no `_CodeSignature` seal, so macOS
+  rejected it outright. Releases are now ad-hoc signed, which turns this into the
+  ordinary unidentified-developer prompt. Existing downloads can be fixed with
+  `xattr -dr com.apple.quarantine /Applications/Skrab.app`.
+
+### Changed
+
+- **Dark is now the default theme** rather than following the system. Light and
+  system remain one click away in Settings.
+- Documentation now covers the pinned-item workflow, screenshots, custom shortcuts,
+  and how to upgrade cleanly on Windows.
+
+
 ## [0.1.1] — 2026-07-27
 
 Fixes from the first real use of v0.1.0 on macOS and Windows.
@@ -81,6 +113,7 @@ and smart paste are on the roadmap.
 - Linux is not supported yet — Wayland blocks global shortcuts on most compositors.
 - Screenshot capture, the annotation editor, and smart paste are not implemented.
 
-[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/isttiiak/skrab/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/isttiiak/skrab/releases/tag/v0.2.0
 [0.1.1]: https://github.com/isttiiak/skrab/releases/tag/v0.1.1
 [0.1.0]: https://github.com/isttiiak/skrab/releases/tag/v0.1.0

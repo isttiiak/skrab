@@ -1,10 +1,18 @@
 import { CLIP_ADDED_EVENT } from '@skrab/ipc-types';
 import { listen } from '@tauri-apps/api/event';
-import { ClipboardList, Search, Settings as SettingsIcon, X } from 'lucide-react';
+import {
+  ClipboardList,
+  Crop,
+  Monitor,
+  Pin,
+  Search,
+  Settings as SettingsIcon,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { ClipRow } from '@/components/clipboard/ClipRow';
-import { hidePanel } from '@/lib/tauri';
+import { captureFullscreen, hidePanel, startRegionCapture, togglePinsWidget } from '@/lib/tauri';
 import { cn } from '@/lib/utils';
 import { type TypeFilter, useClipboardStore } from '@/stores/clipboardStore';
 
@@ -152,12 +160,28 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
             <ClipboardList size={15} />
           </span>
           <h1 className="text-sm font-semibold tracking-tight">Skrab</h1>
+
+          <div className="ml-auto flex items-center gap-0.5">
+            <ToolButton
+              label="Pinned items — click any pin to copy it"
+              onClick={() => void togglePinsWidget()}
+            >
+              <Pin size={15} />
+            </ToolButton>
+            <ToolButton label="Capture a region" onClick={() => void startRegionCapture()}>
+              <Crop size={15} />
+            </ToolButton>
+            <ToolButton label="Capture the screen" onClick={() => void captureFullscreen()}>
+              <Monitor size={15} />
+            </ToolButton>
+          </div>
+
           <button
             type="button"
             onClick={onOpenSettings}
             aria-label="Settings"
             title="Settings"
-            className="text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-visible:ring-ring ml-auto rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-visible:ring-ring rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             <SettingsIcon size={15} />
           </button>
@@ -240,6 +264,28 @@ export function ClipboardPanel({ onOpenSettings }: { onOpenSettings: () => void 
         </span>
       </footer>
     </div>
+  );
+}
+
+function ToolButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className="text-muted-foreground hover:bg-primary-soft hover:text-primary focus-visible:ring-ring rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+    >
+      {children}
+    </button>
   );
 }
 

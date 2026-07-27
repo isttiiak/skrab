@@ -1,4 +1,15 @@
-import type { AppInfo, AppSettings, ClipItem, ClipQuery, HistoryStats } from '@skrab/ipc-types';
+import type {
+  AppInfo,
+  AppSettings,
+  CaptureRegion,
+  CaptureResult,
+  ClipItem,
+  ClipQuery,
+  HistoryStats,
+  HotkeyBindings,
+  HotkeyStatus,
+  OverlayFrame,
+} from '@skrab/ipc-types';
 import { invoke } from '@tauri-apps/api/core';
 
 /**
@@ -70,6 +81,42 @@ export function saveSettings(settings: AppSettings): Promise<AppSettings> {
 
 export function setMonitoring(enabled: boolean): Promise<void> {
   return call<void>('set_monitoring', { enabled });
+}
+
+// ------------------------------------------------------------------ hotkeys
+
+export function setHotkeys(bindings: HotkeyBindings): Promise<HotkeyStatus[]> {
+  return call<HotkeyStatus[]>('set_hotkeys', { bindings });
+}
+
+export function hotkeyStatus(): Promise<HotkeyStatus[]> {
+  return call<HotkeyStatus[]>('hotkey_status');
+}
+
+export function defaultHotkeys(): Promise<HotkeyBindings> {
+  return call<HotkeyBindings>('default_hotkeys');
+}
+
+// ------------------------------------------------------------------ capture
+
+export function startRegionCapture(): Promise<void> {
+  return call<void>('start_region_capture');
+}
+
+export function captureFullscreen(): Promise<void> {
+  return call<void>('capture_fullscreen');
+}
+
+export function getOverlayFrame(): Promise<OverlayFrame | null> {
+  return call<OverlayFrame | null>('get_overlay_frame');
+}
+
+export function cancelRegionCapture(): Promise<void> {
+  return call<void>('cancel_region_capture');
+}
+
+export function finishRegionCapture(region: CaptureRegion): Promise<CaptureResult> {
+  return call<CaptureResult>('finish_region_capture', { region });
 }
 
 // ---------------------------------------------------------------- smart paste

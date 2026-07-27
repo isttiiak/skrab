@@ -168,6 +168,88 @@ pub fn set_monitoring(monitor: State<'_, MonitorState>, enabled: bool) {
     monitor.set_enabled(enabled);
 }
 
+// ---------------------------------------------------------------- hotkeys
+
+/// Saves shortcut bindings and re-registers them immediately.
+///
+/// Returns the outcome per action so Settings can say exactly which one another app
+/// has taken, rather than failing silently the way a global shortcut normally does.
+#[tauri::command]
+pub fn set_hotkeys(
+    app: AppHandle,
+    db: State<'_, Database>,
+    state: State<'_, SettingsState>,
+    bindings: crate::hotkeys::HotkeyBindings,
+) -> Result<Vec<crate::hotkeys::HotkeyStatus>> {
+    let mut settings = state.read().clone();
+    settings.hotkeys = bindings;
+
+    db.with(|conn| crate::settings::save(conn, &settings))?;
+    let statuses = crate::hotkeys::apply(&app, &settings.hotkeys);
+    state.replace(settings);
+
+    Ok(statuses)
+}
+
+/// Re-applies the stored bindings and reports their state, without changing them.
+#[tauri::command]
+pub fn hotkey_status(
+    app: AppHandle,
+    state: State<'_, SettingsState>,
+) -> Vec<crate::hotkeys::HotkeyStatus> {
+    let bindings = state.read().hotkeys.clone();
+    crate::hotkeys::apply(&app, &bindings)
+}
+
+#[tauri::command]
+pub fn default_hotkeys() -> crate::hotkeys::HotkeyBindings {
+    crate::hotkeys::HotkeyBindings::default()
+}
+
+// ---------------------------------------------------------------- capture UI
+
+#[tauri::command]
+pub fn start_region_capture(app: AppHandle) {
+    crate::screenshot::overlay::open(&app);
+}
+
+#[tauri::command]
+pub fn capture_fullscreen(app: AppHandle) {
+    crate::screenshot::overlay::capture_fullscreen_now(&app);
+}
+
+#[tauri::command]
+pub fn get_overlay_frame(
+    state: State<'_, crate::screenshot::overlay::OverlayState>,
+) -> Option<crate::screenshot::overlay::OverlayFrame> {
+    state.frame()
+}
+
+#[tauri::command]
+pub fn cancel_region_capture(app: AppHandle) {
+    crate::screenshot::overlay::close(&app);
+}
+
+/// Crops the frozen overlay frame and copies the result to the clipboard.
+#[tauri::command]
+pub fn finish_region_capture(
+    app: AppHandle,
+    region: crate::screenshot::CaptureRegion,
+) -> Result<CaptureResult> {
+    let capture = crate::screenshot::overlay::finish_region(&app, region)?;
+    crate::screenshot::overlay::close(&app);
+
+    let path = capture.path.to_string_lossy().into_owned();
+    crate::screenshot::overlay::record_and_copy(&app, &capture);
+
+    Ok(CaptureResult {
+        id: String::new(),
+        path,
+        width: capture.width,
+        height: capture.height,
+    })
+}
+
 // ---------------------------------------------------------------- smart paste
 
 #[tauri::command]

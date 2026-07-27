@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Baseline permissions for the Skrab panel and the pinned-items widget. Deliberately narrow: the webview renders untrusted copied content, so it gets no filesystem, shell, or SQL access. Everything system-level goes through typed Rust commands.",
-  "windows": ["main", "pins"],
+  "windows": ["main", "pins", "capture-overlay"],
   "permissions": [
     "core:default",
     "core:window:allow-show",

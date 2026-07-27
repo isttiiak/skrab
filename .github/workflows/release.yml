@@ -135,6 +135,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Ad-hoc sign the .app bundle. Without this Tauri leaves the bundle with
+          # only the linker's implicit signature and no _CodeSignature seal, so
+          # macOS reports "Skrab.app is damaged and can't be opened" rather than the
+          # ordinary unidentified-developer prompt. Ad-hoc signing does not replace
+          # notarization — users still need "Open Anyway" once — but it turns an
+          # apparently broken download into a normal Gatekeeper warning.
+          APPLE_SIGNING_IDENTITY: '-'
           # Updater signing. Generate once with:
           #   pnpm --filter @skrab/desktop tauri signer generate -w ~/.tauri/skrab.key
           # then store the private key and password as repository secrets, and put the

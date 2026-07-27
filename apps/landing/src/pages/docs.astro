@@ -7,6 +7,8 @@ const TOC = [
   { id: 'install-windows', label: 'Install on Windows' },
   { id: 'windows-smartscreen', label: '— SmartScreen warning' },
   { id: 'first-run', label: 'First run' },
+  { id: 'pinned', label: 'Pinned items (smart paste)' },
+  { id: 'screenshots', label: 'Screenshots' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
   { id: 'privacy', label: 'Privacy & passwords' },
   { id: 'build', label: 'Build from source' },
@@ -47,38 +49,28 @@ const TOC = [
       </section>
 
       <section id="macos-gatekeeper">
-        <h2>"Skrab is damaged" or "cannot be opened"</h2>
+        <h2>"Skrab is damaged and can't be opened"</h2>
         <div class="callout amber">
-          <b>This is expected, and Skrab is not damaged.</b>
+          <b>Skrab is not damaged.</b>
           <p>
-            Builds are currently unsigned because an Apple Developer certificate costs
-            $99/year — money this project does not spend before it has users. macOS shows
-            the same warning for every unsigned app.
+            macOS shows this exact wording for any app that is not notarised by Apple,
+            which costs $99/year — money this project does not spend before it has
+            users. The download is fine; macOS simply refuses to vouch for it.
           </p>
         </div>
-        <p>
-          On macOS 15 Sequoia and macOS 26 Tahoe, the old right-click → <b>Open</b> trick
-          no longer works. Do this instead:
+        <p>The fix takes one command. Paste it in Terminal:</p>
+        <pre class="scroll-x"><code>xattr -dr com.apple.quarantine /Applications/Skrab.app</code></pre>
+        <p class="muted small">
+          That removes the "downloaded from the internet" flag macOS attaches to the
+          file. Only ever run it on software you downloaded yourself and trust.
         </p>
-        <ol>
-          <li>Try to open Skrab once and dismiss the warning.</li>
-          <li>
-            Open <b>System Settings → Privacy &amp; Security</b>.
-          </li>
-          <li>
-            Scroll to the <b>Security</b> section. You will see
-            <i>"Skrab was blocked to protect your Mac."</i>
-          </li>
-          <li>Click <b>Open Anyway</b>, then confirm with Touch ID or your password.</li>
-        </ol>
-        <p class="muted">You only have to do this once, not on every update.</p>
+        <p>Then open Skrab normally. You only do this once per version.</p>
         <details>
-          <summary>Or use the command line</summary>
-          <pre
-            class="scroll-x"><code>xattr -dr com.apple.quarantine /Applications/Skrab.app</code></pre>
-          <p class="muted small">
-            This strips the download quarantine flag. Only run it on software you trust
-            and downloaded yourself.
+          <summary>Why not right-click → Open?</summary>
+          <p>
+            That used to work, but macOS 15 Sequoia removed the contextual-menu bypass,
+            and for the "damaged" case it never applied — that path is only offered for
+            apps that macOS considers merely unidentified, not quarantined-and-unsigned.
           </p>
         </details>
       </section>
@@ -87,12 +79,11 @@ const TOC = [
         <h2>Install on Windows</h2>
         <p class="muted">Windows 10 and Windows 11, 64-bit.</p>
         <ol>
-          <li>Download the <code>.msi</code> installer from the <a href="/download">download page</a>.</li>
+          <li>Download the <code>.msi</code> from the <a href="/download">download page</a>.</li>
           <li>
             Double-click it. If SmartScreen appears, see
             <a href="#windows-smartscreen">the next section</a>.
           </li>
-          <li>Follow the installer. Skrab installs to <code>Program Files</code>.</li>
           <li>
             Skrab starts minimised to the notification area. If you do not see the icon,
             click the <b>^</b> arrow next to the clock and drag Skrab onto the taskbar so
@@ -100,10 +91,21 @@ const TOC = [
           </li>
         </ol>
         <div class="callout teal">
-          <b>WebView2 is required.</b>
+          <b>Updating and still seeing the old version?</b>
           <p>
-            Windows 11 ships with it already. On older Windows 10 builds the installer will
-            fetch it automatically — allow it through if prompted.
+            <b>Quit Skrab first.</b> Right-click the tray icon → <b>Quit Skrab</b>, then
+            run the installer. Windows cannot replace files that are in use, so
+            installing over a running Skrab leaves the old build on disk.
+          </p>
+          <p>
+            Check which version you have in <b>Settings</b> — the version is printed at
+            the bottom of the panel. If it still shows the old number, uninstall from
+            <b>Settings → Apps → Installed apps → Skrab</b> and install again.
+          </p>
+          <p>
+            Stick to one installer type. The <code>.msi</code> upgrades cleanly in place;
+            mixing <code>.msi</code> and <code>-setup.exe</code> installs two copies that
+            do not know about each other.
           </p>
         </div>
       </section>
@@ -144,6 +146,75 @@ const TOC = [
         </ul>
       </section>
 
+      <section id="pinned">
+        <h2>Pinned items — the floating widget</h2>
+        <p>
+          This is the feature Skrab exists for. Pin the values you need repeatedly, park
+          the widget on top of whatever you are working in, and click each one straight
+          onto your clipboard.
+        </p>
+        <ol>
+          <li>
+            Open the panel and hover a clip. Click the <b>pin</b> icon on the row. Pinned
+            clips rise to the top of the list and are never deleted by retention.
+          </li>
+          <li>
+            Open the widget: the <b>pin button in the panel toolbar</b>, the tray menu
+            (<b>Pinned items</b>), or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>.
+          </li>
+          <li>
+            <b>Drag it by its header</b> to wherever you want it. It floats above every
+            other application and stays there.
+          </li>
+          <li>
+            Click any row. That value goes onto your clipboard — then paste it wherever
+            you like with <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>V</kbd>.
+          </li>
+        </ol>
+        <p>
+          Clicked items get a tick and a strike-through so you can see how far through a
+          form you are, and the highlight moves to the next one automatically. <b>Reset</b>
+          in the header clears the marks when you start the next form.
+        </p>
+        <div class="callout teal">
+          <b>Want it to paste for you?</b>
+          <p>
+            Turn on <b>Settings → Smart paste → Paste automatically</b> and Skrab sends
+            <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>V</kbd> to whatever is behind it after each
+            click. On macOS this needs Accessibility permission (System Settings →
+            Privacy &amp; Security → Accessibility). Left off, Skrab only ever copies —
+            which is the safer default and needs no permission at all.
+          </p>
+        </div>
+      </section>
+
+      <section id="screenshots">
+        <h2>Screenshots</h2>
+        <ul class="checks">
+          <li>
+            <b>Region.</b> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd>, or the
+            crop button in the toolbar. The screen freezes; drag a box and release.
+            <kbd>Esc</kbd> cancels.
+          </li>
+          <li>
+            <b>Whole screen.</b> <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, or
+            the monitor button.
+          </li>
+        </ul>
+        <p>
+          Either way the image lands on your clipboard immediately and is saved to your
+          data folder, so you can paste it straight into a chat or a document.
+        </p>
+        <div class="callout amber">
+          <b>macOS needs Screen Recording permission.</b>
+          <p>
+            The first capture will fail until you grant it in System Settings → Privacy
+            &amp; Security → Screen Recording — and macOS only applies it on a fresh
+            launch, so <b>quit and reopen Skrab</b> afterwards.
+          </p>
+        </div>
+      </section>
+
       <section id="shortcuts">
         <h2>Keyboard shortcuts</h2>
         <div class="scroll-x">
@@ -174,11 +245,40 @@ const TOC = [
                 <td colspan="2"><kbd>Esc</kbd></td>
               </tr>
               <tr>
+                <td>Pinned items widget</td>
+                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td>
+                <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td>
+              </tr>
+              <tr>
+                <td>Capture a region</td>
+                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd></td>
+                <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd></td>
+              </tr>
+              <tr>
+                <td>Capture the screen</td>
+                <td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td>
+                <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td>
+              </tr>
+              <tr>
                 <td>Search</td>
                 <td colspan="2">Just start typing — the field is already focused</td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="callout teal">
+          <b>All of these are yours to change.</b>
+          <p>
+            <b>Settings → Shortcuts</b>: click a shortcut, press the combination you want,
+            done. Skrab checks it immediately and tells you if another application already
+            owns it or if two Skrab actions would clash — a global shortcut that silently
+            fails to register is the usual way this goes wrong elsewhere.
+          </p>
+          <p>
+            Clearing a shortcut disables that action's hotkey without disabling the
+            feature; the toolbar and tray still work. <b>Restore default shortcuts</b>
+            puts everything back.
+          </p>
         </div>
       </section>
 

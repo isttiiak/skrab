@@ -20,7 +20,7 @@ pub struct Capture {
 /// which is impossible to act on. The permission also only takes effect after a
 /// relaunch, and in development every rebuild changes the binary path and resets it —
 /// so the message says both things.
-fn capture_error(context: &str, error: impl std::fmt::Display) -> Error {
+pub fn permission_hint(context: &str, error: impl std::fmt::Display) -> Error {
     if cfg!(target_os = "macos") {
         Error::Other(format!(
             "{context}: {error}. On macOS this usually means Screen Recording \
@@ -34,7 +34,7 @@ fn capture_error(context: &str, error: impl std::fmt::Display) -> Error {
 }
 
 pub fn list_monitors() -> Result<Vec<MonitorInfo>> {
-    let monitors = Monitor::all().map_err(|e| capture_error("could not list displays", e))?;
+    let monitors = Monitor::all().map_err(|e| permission_hint("could not list displays", e))?;
 
     monitors
         .into_iter()
@@ -54,7 +54,7 @@ pub fn list_monitors() -> Result<Vec<MonitorInfo>> {
 }
 
 pub fn list_windows() -> Result<Vec<WindowInfo>> {
-    let windows = Window::all().map_err(|e| capture_error("could not list windows", e))?;
+    let windows = Window::all().map_err(|e| permission_hint("could not list windows", e))?;
 
     Ok(windows
         .into_iter()
@@ -85,7 +85,7 @@ pub fn list_windows() -> Result<Vec<WindowInfo>> {
 
 /// Captures one display. `monitor_id` of `None` means the primary display.
 pub fn capture_monitor(dir: &Path, monitor_id: Option<u32>) -> Result<Capture> {
-    let monitors = Monitor::all().map_err(|e| capture_error("could not list displays", e))?;
+    let monitors = Monitor::all().map_err(|e| permission_hint("could not list displays", e))?;
 
     let monitor = match monitor_id {
         Some(id) => monitors
@@ -100,23 +100,23 @@ pub fn capture_monitor(dir: &Path, monitor_id: Option<u32>) -> Result<Capture> {
 
     let image = monitor
         .capture_image()
-        .map_err(|e| capture_error("could not capture the display", e))?;
+        .map_err(|e| permission_hint("could not capture the display", e))?;
 
-    save(dir, image, CaptureMode::Fullscreen)
+    save_image(dir, image, CaptureMode::Fullscreen)
 }
 
 pub fn capture_window(dir: &Path, window_id: u32) -> Result<Capture> {
     let window = Window::all()
-        .map_err(|e| capture_error("could not list windows", e))?
+        .map_err(|e| permission_hint("could not list windows", e))?
         .into_iter()
         .find(|w| w.id().unwrap_or(0) == window_id)
         .ok_or_else(|| Error::Other("that window has closed".into()))?;
 
     let image = window
         .capture_image()
-        .map_err(|e| capture_error("could not capture the window", e))?;
+        .map_err(|e| permission_hint("could not capture the window", e))?;
 
-    save(dir, image, CaptureMode::Window)
+    save_image(dir, image, CaptureMode::Window)
 }
 
 /// Captures a rectangle of the virtual desktop.
@@ -129,7 +129,7 @@ pub fn capture_region(dir: &Path, region: CaptureRegion) -> Result<Capture> {
         return Err(Error::Other("the selected region is empty".into()));
     }
 
-    let monitors = Monitor::all().map_err(|e| capture_error("could not list displays", e))?;
+    let monitors = Monitor::all().map_err(|e| permission_hint("could not list displays", e))?;
 
     // Pick the display containing the region's origin, falling back to the primary.
     let monitor = monitors
@@ -147,7 +147,7 @@ pub fn capture_region(dir: &Path, region: CaptureRegion) -> Result<Capture> {
 
     let full = monitor
         .capture_image()
-        .map_err(|e| capture_error("could not capture the display", e))?;
+        .map_err(|e| permission_hint("could not capture the display", e))?;
 
     let local = CaptureRegion {
         x: region.x - monitor.x().unwrap_or(0),
@@ -161,10 +161,10 @@ pub fn capture_region(dir: &Path, region: CaptureRegion) -> Result<Capture> {
         .ok_or_else(|| Error::Other("the selected region is outside the display".into()))?;
 
     let cropped = image::imageops::crop_imm(&full, x, y, w, h).to_image();
-    save(dir, cropped, CaptureMode::Region)
+    save_image(dir, cropped, CaptureMode::Region)
 }
 
-fn save(dir: &Path, image: RgbaImage, mode: CaptureMode) -> Result<Capture> {
+pub fn save_image(dir: &Path, image: RgbaImage, mode: CaptureMode) -> Result<Capture> {
     std::fs::create_dir_all(dir)?;
     let path = dir.join(format!("{}.png", uuid::Uuid::new_v4()));
     let (width, height) = image.dimensions();
@@ -190,7 +190,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("skrab-shot-{}", uuid::Uuid::new_v4()));
         let image = RgbaImage::from_pixel(64, 32, image::Rgba([10, 120, 200, 255]));
 
-        let capture = save(&dir, image, CaptureMode::Region).expect("saves");
+        let capture = save_image(&dir, image, CaptureMode::Region).expect("saves");
 
         assert_eq!((capture.width, capture.height), (64, 32));
         assert_eq!(capture.mode, CaptureMode::Region);
